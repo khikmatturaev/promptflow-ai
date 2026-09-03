@@ -66,6 +66,27 @@ async function readToolNames(): Promise<string[]> {
     }
 }
 
+async function readDeploymentHeaders(): Promise<Record<string, string>> {
+    if (typeof window === "undefined") return {};
+
+    try {
+        const response = await fetch(window.location.href, {
+            cache: "no-store",
+            credentials: "same-origin",
+        });
+
+        const headers: Record<string, string> = {};
+
+        response.headers.forEach((value, key) => {
+            headers[key] = value;
+        });
+
+        return headers;
+    } catch {
+        return {};
+    }
+}
+
 export async function runFinalWowDemo(
     initialNodes: ArchitectureNode[],
     initialEdges: ArchitectureEdge[],
@@ -197,7 +218,10 @@ export async function runFinalWowDemo(
 
     const qaStarted = Date.now();
     mark("qa", "running", "Running the production release gate against the final candidate.", qaStarted);
-    const names = await readToolNames();
+    const [names, deploymentHeaders] = await Promise.all([
+        readToolNames(),
+        readDeploymentHeaders(),
+    ]);
     const qa = runProductionQA({
         nodes,
         edges,
@@ -206,13 +230,7 @@ export async function runFinalWowDemo(
         codeReview: review,
         versioning: useCanvasStore.getState().versioning,
         webmcpToolNames: names,
-        headers: {
-            "Cross-Origin-Opener-Policy": "same-origin",
-            "Cross-Origin-Embedder-Policy": "require-corp",
-            "Permissions-Policy": "tools=(self)",
-            "X-Content-Type-Options": "nosniff",
-            "Referrer-Policy": "strict-origin-when-cross-origin",
-        },
+        headers: deploymentHeaders,
     });
     useCanvasStore.getState().setProductionQA(qa);
     mark("qa", qa.status === "fail" ? "failed" : "completed", `${qa.score}/100 release gate · ${qa.blockers.length} blockers · ${qa.warnings.length} warnings`, qaStarted);

@@ -1,0 +1,17 @@
+# PromptFlow.ai production deployment contract.
+# WebContainers and WebMCP both require an origin-isolated document.
+# Keep these headers on every HTML/asset response served by Netlify.
+
+[build]
+  command = "pnpm build"
+  publish = "dist"
+
+[[headers]]
+  for = "/*"
+  [headers.values]
+    Cross-Origin-Opener-Policy = "same-origin"
+    Cross-Origin-Embedder-Policy = "require-corp"
+    Origin-Agent-Cluster = "?1"
+    Permissions-Policy = "tools=(self)"
+    X-Content-Type-Options = "nosniff"
+    Referrer-Policy = "strict-origin-when-cross-origin"

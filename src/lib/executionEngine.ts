@@ -32,10 +32,17 @@ function capability(): ExecutionCapability {
             runtime: "static",
         };
     }
+    if (!window.crossOriginIsolated) {
+        return {
+            supported: false,
+            reason: "Cross-origin isolation is disabled. The production host must send COOP: same-origin and COEP: require-corp.",
+            runtime: "static",
+        };
+    }
     if (typeof SharedArrayBuffer === "undefined") {
         return {
             supported: false,
-            reason: "SharedArrayBuffer is unavailable. Cross-origin isolation is required for the in-browser runtime.",
+            reason: "SharedArrayBuffer is unavailable even though the document is cross-origin isolated.",
             runtime: "static",
         };
     }

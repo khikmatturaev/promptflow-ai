@@ -124,6 +124,9 @@ process.exit(exitCode);`;
 }
 
 function packageJson(name: string, runtime: string, stack: string[], hasReact: boolean): string {
+
+    console.log(runtime);
+
     // function packageJson(name: string, stack: string[], hasReact: boolean): string {
     const dependencies: Record<string, string> = hasReact ? { react: "^19.2.8", "react-dom": "^19.2.8" } : {};
     if (stack.includes("Express")) dependencies.express = "^5.2.1";

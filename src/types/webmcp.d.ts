@@ -21,7 +21,7 @@ declare global {
     annotations?: WebMCPToolAnnotations;
     execute: (
       input: TInput,
-      context: WebMCPToolExecutionContext,
+      context?: WebMCPToolExecutionContext,
     ) => Promise<string> | string;
   }
 

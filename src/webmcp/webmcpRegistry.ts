@@ -13,6 +13,7 @@ import type {
     TransformArchitectureInput,
     FixArchitectureInput,
     UpdateArchitectureNodeInput,
+    ArchitectureNodeType,
 } from "../types";
 
 const MAX_ID_LENGTH = 120;
@@ -329,14 +330,14 @@ function parseTransformInput(input: unknown): TransformArchitectureInput {
             }
             if (rawOperation.x !== undefined && !isFiniteNumber(rawOperation.x)) throw new Error("Invalid add transform X coordinate.");
             if (rawOperation.y !== undefined && !isFiniteNumber(rawOperation.y)) throw new Error("Invalid add transform Y coordinate.");
-            return { kind, id: rawOperation.id, label: rawOperation.label, type: rawOperation.type, description: rawOperation.description, x: rawOperation.x, y: rawOperation.y };
+            return { kind, id: rawOperation.id, label: rawOperation.label, type: rawOperation.type, description: rawOperation.description, x: rawOperation.x as number, y: rawOperation.y as number };
         }
         if (kind === "update") {
             if (!isNonEmptyBoundedString(rawOperation.nodeId, MAX_ID_LENGTH)) throw new Error("Invalid update transform nodeId.");
             if (rawOperation.label !== undefined && !isBoundedString(rawOperation.label, MAX_LABEL_LENGTH)) throw new Error("Invalid update transform label.");
             if (rawOperation.description !== undefined && !isBoundedString(rawOperation.description, MAX_DESCRIPTION_LENGTH)) throw new Error("Invalid update transform description.");
             if (rawOperation.type !== undefined && !isArchitectureNodeType(rawOperation.type)) throw new Error("Invalid update transform type.");
-            return { kind, nodeId: rawOperation.nodeId, label: rawOperation.label, type: rawOperation.type, description: rawOperation.description };
+            return { kind, nodeId: rawOperation.nodeId, label: rawOperation.label as string, type: rawOperation.type as ArchitectureNodeType, description: rawOperation.description as string };
         }
         if (kind === "remove") {
             if (!isNonEmptyBoundedString(rawOperation.nodeId, MAX_ID_LENGTH)) throw new Error("Invalid remove transform nodeId.");
@@ -345,7 +346,7 @@ function parseTransformInput(input: unknown): TransformArchitectureInput {
         if (kind === "connect") {
             if (!isNonEmptyBoundedString(rawOperation.sourceId, MAX_ID_LENGTH) || !isNonEmptyBoundedString(rawOperation.targetId, MAX_ID_LENGTH)) throw new Error("Invalid connect transform operation.");
             if (rawOperation.label !== undefined && !isBoundedString(rawOperation.label, MAX_LABEL_LENGTH)) throw new Error("Invalid transform connection label.");
-            return { kind, sourceId: rawOperation.sourceId, targetId: rawOperation.targetId, label: rawOperation.label };
+            return { kind, sourceId: rawOperation.sourceId, targetId: rawOperation.targetId, label: rawOperation.label as string };
         }
         if (kind === "disconnect") {
             if (!isNonEmptyBoundedString(rawOperation.sourceId, MAX_ID_LENGTH) || !isNonEmptyBoundedString(rawOperation.targetId, MAX_ID_LENGTH)) throw new Error("Invalid disconnect transform operation.");
@@ -488,7 +489,14 @@ function instrumentAgentTool(tool: WebMCPToolDefinition): WebMCPToolDefinition {
     return {
         ...tool,
         execute: async (input, context) => {
-            if (context.signal.aborted) {
+            // Chrome WebMCP testing builds can invoke execute without the optional
+            // execution-options object. Keep the registry compatible with both
+            // the current WebMCP contract and that browser behavior.
+            const executionContext: WebMCPToolExecutionContext = context ?? {
+                signal: new AbortController().signal,
+            };
+
+            if (executionContext.signal.aborted) {
                 throw new DOMException("Tool execution was aborted.", "AbortError");
             }
 
@@ -499,7 +507,7 @@ function instrumentAgentTool(tool: WebMCPToolDefinition): WebMCPToolDefinition {
             );
 
             try {
-                const result = await tool.execute(input, context);
+                const result = await tool.execute(input, executionContext);
                 useCanvasStore.getState().completeAgentToolCall(
                     callId,
                     summarizeAgentResult(result),
