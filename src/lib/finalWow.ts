@@ -46,6 +46,14 @@ function survivability(report: ReturnType<typeof runDigitalTwin>): number {
     return Math.min(...report.scenarios.map((scenario) => scenario.survivability));
 }
 
+function scenarioSurvivability(
+    report: ReturnType<typeof runDigitalTwin>,
+    kind: "compute-failure" | "load-spike",
+): number {
+    return report.scenarios.find((scenario) => scenario.event.kind === kind)?.survivability
+        ?? survivability(report);
+}
+
 
 async function readToolNames(): Promise<string[]> {
     const context = document.modelContext;
@@ -107,12 +115,23 @@ export async function runFinalWowDemo(
         { kind: "load-spike", label: `10M-user traffic spike`, targetUsers },
         { kind: "compute-failure", label: "Compute failure" },
     ], targetUsers);
-    mark("break", "completed", `${survivability(twinBefore)}/100 survivability · ${twinBefore.singlePointsOfFailure.length} SPOFs`, breakStarted);
+    const injectedFailures = twinBefore.scenarios.filter((item) => item.event.kind !== "load-spike");
+    const breakSignals = twinBefore.scenarios.flatMap((item) => [...item.failureModes, ...item.bottlenecks]);
+    mark(
+        "break",
+        "completed",
+        `Failure injected: ${injectedFailures.length} scenario${injectedFailures.length === 1 ? "" : "s"} · ${breakSignals.length} diagnostic signal${breakSignals.length === 1 ? "" : "s"} · ${survivability(twinBefore)}/100 survivability · ${twinBefore.singlePointsOfFailure.length} SPOFs`,
+        breakStarted,
+    );
 
     const diagnoseStarted = Date.now();
-    mark("diagnose", "running", "Tracing failure propagation and bottlenecks back to architecture boundaries.", diagnoseStarted);
-    const diagnostics = twinBefore.scenarios.flatMap((scenario) => [...scenario.bottlenecks, ...scenario.failureModes]);
-    mark("diagnose", "completed", `${diagnostics.length} failure signals mapped`, diagnoseStarted);
+    mark("diagnose", "running", "Tracing the injected failure and its propagation through architecture boundaries.", diagnoseStarted);
+    const diagnostics = twinBefore.scenarios.flatMap((scenario) => [
+        scenario.event.label,
+        ...scenario.bottlenecks,
+        ...scenario.failureModes,
+    ]);
+    mark("diagnose", "completed", `${diagnostics.length} failure signal${diagnostics.length === 1 ? "" : "s"} traced`, diagnoseStarted);
 
     const healStarted = Date.now();
     mark("heal", "running", "Applying bounded, non-destructive hardening operations.", healStarted);
@@ -132,7 +151,18 @@ export async function runFinalWowDemo(
         { kind: "compute-failure", label: "Compute failure" },
     ], targetUsers);
     const afterAudit = auditArchitecture(nodes, edges);
-    mark("retest", "completed", `${survivability(twinBefore)} → ${survivability(twinAfter)} survivability · ${beforeAudit.score} → ${afterAudit.score} score`, retestStarted);
+    // The Judge's BREAK/HEAL scenario is specifically a compute failure.
+    // Do not collapse it with the independent load-spike scenario: doing so
+    // can hide a real recovery behind an unrelated lower load score.
+    const beforeFailureSurvivability = scenarioSurvivability(twinBefore, "compute-failure");
+    const afterFailureSurvivability = scenarioSurvivability(twinAfter, "compute-failure");
+    const recoveryDelta = afterFailureSurvivability - beforeFailureSurvivability;
+    mark(
+        "retest",
+        "completed",
+        `${beforeFailureSurvivability} → ${afterFailureSurvivability} compute-failure survivability (${recoveryDelta >= 0 ? "+" : ""}${recoveryDelta}) · ${beforeAudit.score} → ${afterAudit.score} score`,
+        retestStarted,
+    );
 
     const buildStarted = Date.now();
     mark("build", "running", "Generating implementation artifacts, contracts and a real browser workspace.", buildStarted);
@@ -193,13 +223,14 @@ export async function runFinalWowDemo(
         before: beforeAudit.score,
         after: afterAudit.score,
         improvement: afterAudit.score - beforeAudit.score,
-        survivabilityBefore: survivability(twinBefore),
-        survivabilityAfter: survivability(twinAfter),
+        survivabilityBefore: beforeFailureSurvivability,
+        survivabilityAfter: afterFailureSurvivability,
+        recoveryDelta,
         qaScore: qa.score,
     };
     const status = qa.status === "fail" ? "failed" : "completed";
     const headline = status === "completed"
-        ? `Production candidate verified: ${scorecard.after}/100 architecture score, ${scorecard.survivabilityAfter}/100 survivability, ${qa.score}/100 QA.`
+        ? `Production candidate verified: ${scorecard.after}/100 architecture score, compute-failure survivability ${scorecard.survivabilityBefore} → ${scorecard.survivabilityAfter} (${scorecard.recoveryDelta >= 0 ? "+" : ""}${scorecard.recoveryDelta}), ${qa.score}/100 QA.`
         : `Candidate hardened: ${scorecard.after}/100 architecture score, but ${qa.blockers.length} release blocker(s) remain.`;
     mark("verdict", status === "completed" ? "completed" : "failed", headline, verdictStarted);
 

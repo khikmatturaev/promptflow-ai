@@ -83,7 +83,13 @@ export function FinalWowPanel({ onClose }: FinalWowPanelProps) {
                     {(run?.stages ?? liveStages).map((stage) => (
                         <div key={stage.id} className={`min-h-12 bg-[#07080b] p-2 ${stage.status === "running" ? "bg-[#d9ff4f]/5.5" : stage.status === "completed" ? "bg-[#d9ff4f]/2.5" : ""}`}>
                             <div className="flex items-center gap-1.5 text-[8px] font-semibold uppercase tracking-widest text-white/45"><StageIcon stage={stage} />{stage.label}</div>
-                            <div className="text-[8px] leading-3 text-white/20">{stage.durationMs ? `${stage.durationMs}ms` : stage.status === "running" ? "working…" : "waiting"}</div>
+                            <div className="text-[8px] leading-3 text-white/20">
+                                {stage.status === "running"
+                                    ? "working…"
+                                    : stage.status === "completed" || stage.status === "failed" || stage.status === "skipped"
+                                        ? `${stage.durationMs}ms`
+                                        : "waiting"}
+                            </div>
                         </div>
                     ))}
                 </div>
@@ -95,8 +101,8 @@ export function FinalWowPanel({ onClose }: FinalWowPanelProps) {
                         {[
                             ["Before", `${run.scorecard.before}`],
                             ["After", `${run.scorecard.after}`],
-                            ["Gain", `${run.scorecard.improvement >= 0 ? "+" : ""}${run.scorecard.improvement}`],
-                            ["Survivability", `${run.scorecard.survivabilityBefore} → ${run.scorecard.survivabilityAfter}`],
+                            ["Recovery", `${run.scorecard.recoveryDelta >= 0 ? "+" : ""}${run.scorecard.recoveryDelta}`],
+                            ["Failure resilience", `${run.scorecard.survivabilityBefore} → ${run.scorecard.survivabilityAfter}`],
                             ["QA", `${run.scorecard.qaScore}`],
                         ].map(([label, value]) => <div key={label} className="rounded-lg border border-[#d9ff4f]/10 bg-[#d9ff4f]/2.5 p-2"><div className="text-[8px] uppercase tracking-[.12em] text-white/25">{label}</div><div className="mt-1 text-sm font-semibold text-[#d9ff4f]">{value}</div></div>)}
                     </div>

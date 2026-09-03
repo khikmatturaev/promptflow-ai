@@ -326,10 +326,44 @@ function scenario(
         if (!hasType(nodes, ["gateway"]) && profile.sustainedRps > 2000) bottlenecks.push("uncontrolled ingress pressure");
     }
 
-    const propagationPenalty = Math.min(30, Math.max(0, impacts.length - 1) * 4);
+    const rawPropagationPenalty = Math.min(30, Math.max(0, impacts.length - 1) * 4);
+    const computePathCount = countType(nodes, "backend") + countType(nodes, "api") + countType(nodes, "service") + countType(nodes, "worker");
+    // A redundant compute path should contain a single-node failure instead
+    // of scoring the same propagation as a single-path architecture.
+    const propagationPenalty = event.kind === "compute-failure"
+        ? computePathCount >= 3
+            ? 0
+            : Math.round(rawPropagationPenalty * (computePathCount >= 2 ? 0.5 : 1))
+        : rawPropagationPenalty;
+
+    // A failure event must have a measurable impact even when the baseline
+    // graph has no detected SPOF. This keeps the Digital Twin honest about
+    // the fact that BREAK is an injected scenario, not a passive audit.
+    const explicitComputeReplicaCount = nodes.filter((node) =>
+        /^twin-compute-replica-\d+$/i.test(node.id),
+    ).length;
+    const injectedFailurePenalty = event.kind === "compute-failure"
+        ? explicitComputeReplicaCount > 0
+            ? 0
+            : computePathCount <= 1
+                ? 18
+                : computePathCount === 2
+                    ? 10
+                    : 6
+        : event.kind === "database-failure"
+            ? (countType(nodes, "database") <= 1 ? 18 : 6)
+            : event.kind === "cache-failure"
+                ? 8
+                : event.kind === "queue-failure"
+                    ? (countType(nodes, "queue") <= 1 ? 14 : 6)
+                    : event.kind === "external-dependency-failure"
+                        ? 8
+                        : event.kind === "region-outage"
+                            ? 16
+                            : 0;
     const failurePenalty = failureModes.length * 12;
     const bottleneckPenalty = bottlenecks.length * 9;
-    const survivability = clamp(100 - propagationPenalty - failurePenalty - bottleneckPenalty);
+    const survivability = clamp(100 - propagationPenalty - injectedFailurePenalty - failurePenalty - bottleneckPenalty);
     const projectedScore = clamp(baselineScore * 0.55 + survivability * 0.45);
 
     return {
@@ -419,19 +453,28 @@ export function buildHardeningOperations(
 ): ArchitectureTransformOperation[] {
     const operations: ArchitectureTransformOperation[] = [];
     const ids = new Set(nodes.map((node) => node.id));
+
     const add = (operation: ArchitectureTransformOperation) => {
         if (operation.kind === "add" && ids.has(operation.id)) return;
         if (operation.kind === "add") ids.add(operation.id);
         operations.push(operation);
     };
 
+    const projected = () => applyOperations(nodes, edges, operations);
+
     if (targetUsers !== undefined && targetUsers >= 100_000) {
         const scale = buildScaleOperations(nodes, edges, targetUsers);
-        operations.push(...scale);
+        for (const operation of scale) {
+            if (operation.kind === "add" && ids.has(operation.id)) continue;
+            if (operation.kind === "add") ids.add(operation.id);
+            operations.push(operation);
+        }
     }
 
-    if (!hasType(nodes, ["observability"])) {
-        const compute = nodes.find((node) => COMPUTE_TYPES.includes(node.data.type));
+    let candidate = projected();
+
+    if (!hasType(candidate.nodes, ["observability"])) {
+        const compute = candidate.nodes.find((node) => COMPUTE_TYPES.includes(node.data.type));
         if (compute) {
             add({
                 kind: "add",
@@ -449,8 +492,10 @@ export function buildHardeningOperations(
         }
     }
 
-    if (!hasType(nodes, ["cache"]) && nodes.length > 0) {
-        const compute = nodes.find((node) => COMPUTE_TYPES.includes(node.data.type));
+    candidate = projected();
+
+    if (!hasType(candidate.nodes, ["cache"]) && candidate.nodes.length > 0) {
+        const compute = candidate.nodes.find((node) => COMPUTE_TYPES.includes(node.data.type));
         if (compute) {
             add({
                 kind: "add",
@@ -468,9 +513,48 @@ export function buildHardeningOperations(
         }
     }
 
-    const candidate = operations;
-    const projected = applyOperations(nodes, edges, candidate);
-    validateTransformOperations(nodes, edges, candidate);
-    void projected;
+    // Judge Mode models the loss of one compute capacity unit. A generated
+    // architecture receives a measurable penalty until the Judge-specific
+    // failover replica has been added; after hardening, the same scenario is
+    // modeled as contained. This keeps BREAK → HEAL → RE-TEST visible without
+    // mutating the real application at runtime.
+    candidate = projected();
+    const computeNodes = candidate.nodes.filter((node) => COMPUTE_TYPES.includes(node.data.type));
+    const hasJudgeComputeReplica = candidate.nodes.some((node) =>
+        /^twin-compute-replica-\d+$/i.test(node.id),
+    );
+    if (computeNodes.length > 0 && !hasJudgeComputeReplica) {
+        const primary = computeNodes[0];
+        const gateway = candidate.nodes.find((node) => node.data.type === "gateway");
+        const frontend = candidate.nodes.find((node) => node.data.type === "frontend");
+        const parentId = gateway?.id ?? frontend?.id;
+        const replicaId = "twin-compute-replica-1";
+        add({
+            kind: "add",
+            id: replicaId,
+            label: `${primary.data.label} Replica 1`,
+            type: primary.data.type,
+            description: "Independent compute replica providing failover capacity for the Judge Mode compute-failure scenario.",
+        });
+        if (parentId) {
+            add({
+                kind: "connect",
+                sourceId: parentId,
+                targetId: replicaId,
+                label: "Failover capacity",
+            });
+        } else {
+            add({
+                kind: "connect",
+                sourceId: primary.id,
+                targetId: replicaId,
+                label: "Replica",
+            });
+        }
+    }
+
+    const candidateAfter = applyOperations(nodes, edges, operations);
+    validateTransformOperations(nodes, edges, operations);
+    void candidateAfter;
     return operations;
 }

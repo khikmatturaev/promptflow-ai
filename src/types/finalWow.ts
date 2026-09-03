@@ -31,6 +31,7 @@ export interface WowScorecard {
     improvement: number;
     survivabilityBefore: number;
     survivabilityAfter: number;
+    recoveryDelta: number;
     qaScore: number;
 }
 
