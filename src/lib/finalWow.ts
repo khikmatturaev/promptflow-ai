@@ -154,7 +154,16 @@ export async function runFinalWowDemo(
         enableSelfHealing: true,
     });
     useCanvasStore.getState().setExecution(execution);
-    mark("execute", execution.status === "passed" ? "completed" : execution.status === "unsupported" ? "skipped" : "failed", execution.status === "passed" ? `Verified${execution.healingAttempts.length ? ` after ${execution.healingAttempts.length} self-heal cycle(s)` : ""}` : execution.note ?? "Execution requires environment attention.", executeStarted);
+    mark(
+        "execute",
+        execution.status === "passed" ? "completed" : execution.status === "unsupported" ? "skipped" : "failed",
+        execution.status === "passed"
+            ? `Verified${execution.healingAttempts.length ? ` after ${execution.healingAttempts.length} self-heal cycle(s)` : ""}`
+            : execution.diagnostics[0]
+                ? `${execution.diagnostics[0].title}: ${execution.diagnostics[0].evidence.slice(0, 220)}`
+                : execution.note ?? "Execution requires environment attention.",
+        executeStarted,
+    );
 
     const qaStarted = Date.now();
     mark("qa", "running", "Running the production release gate against the final candidate.", qaStarted);
@@ -162,7 +171,7 @@ export async function runFinalWowDemo(
     const qa = runProductionQA({
         nodes,
         edges,
-        project,
+        project: execution.artifacts.length ? { ...project, artifacts: execution.artifacts } : project,
         execution,
         codeReview: review,
         versioning: useCanvasStore.getState().versioning,

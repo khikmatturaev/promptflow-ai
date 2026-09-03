@@ -53,18 +53,25 @@ function representativeCode(plan: ArchitecturePlan): string {
                 : "Node.js";
 
     if (api === "Python") {
-        return `from fastapi import FastAPI
+        return `from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
+import json
+import os
 
-app = FastAPI()
+class Handler(BaseHTTPRequestHandler):
+    def do_GET(self) -> None:
+        payload = {"status": "ok", "domain": "${plan.intent.domain}"}
+        body = json.dumps(payload).encode("utf-8")
+        self.send_response(200)
+        self.send_header("content-type", "application/json")
+        self.send_header("content-length", str(len(body)))
+        self.end_headers()
+        self.wfile.write(body)
 
-@app.get("/health")
-async def health():
-    return {"status": "ok"}
+    def log_message(self, format: str, *args: object) -> None:
+        return
 
-@app.get("/api")
-async def api_root():
-    # Connect the domain services inferred from the architecture.
-    return {"domain": "${plan.intent.domain}"}
+server = ThreadingHTTPServer(("0.0.0.0", int(os.environ.get("PORT", "3000"))), Handler)
+server.serve_forever()
 `;
     }
 
@@ -82,21 +89,17 @@ app.get("/api", async () => ({
 await app.listen({ port: 3000, host: "0.0.0.0" });`;
     }
 
-    return `import express from "express";
+    return `import { createServer } from "node:http";
 
-const app = express();
-app.use(express.json());
-
-app.get("/health", (_req, res) => {
-  res.json({ status: "ok" });
+const server = createServer((_request, response) => {
+  response.writeHead(200, { "content-type": "application/json" });
+  response.end(JSON.stringify({
+    status: "ok",
+    domain: "${plan.intent.domain}",
+  }));
 });
 
-app.get("/api", async (_req, res) => {
-  // Wire the domain services shown in the PromptFlow architecture.
-  res.json({ domain: "${plan.intent.domain}" });
-});
-
-app.listen(process.env.PORT ?? 3000);`;
+server.listen(Number(process.env.PORT ?? 3000), "0.0.0.0");`;
 }
 
 export function ArchitectExperience({
@@ -233,7 +236,7 @@ export function ArchitectExperience({
         const activeIndex = phaseIndex(phase);
         return (
             <div className="pointer-events-none absolute inset-x-0 top-0 z-20 flex justify-center px-3 pt-16 sm:px-6 sm:pt-20">
-                <div className="pointer-events-auto w-full max-w-4xl rounded-2xl border border-white/10 bg-[#0a0c10]/[97%] p-3 shadow-2xl backdrop-blur-xl sm:p-4">
+                <div className="pointer-events-auto w-full max-w-4xl rounded-2xl border border-white/10 bg-[#0a0c10]/97 p-3 shadow-2xl backdrop-blur-xl sm:p-4">
                     <div className="flex items-center gap-3">
                         <div className="relative flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border border-[#d9ff4f]/20 bg-[#d9ff4f]/5 text-[#d9ff4f]">
                             <span className="h-2 w-2 rounded-full bg-[#d9ff4f] shadow-[0_0_12px_rgba(217,255,79,0.8)]" />
@@ -244,18 +247,14 @@ export function ArchitectExperience({
                         <div className="min-w-0 flex-1">
                             <div className="flex items-center justify-between gap-3">
                                 <div className="text-[10px] font-semibold uppercase tracking-[0.16em] text-[#d9ff4f]/70">
-                                    {phase === "complete"
-                                        ? "Architecture compiled"
-                                        : PHASES[activeIndex]?.label}
+                                    {phase === "complete" ? "Architecture compiled" : PHASES[activeIndex]?.label}
                                 </div>
                                 <div className="text-[10px] text-white/30">
                                     {completed}/7
                                 </div>
                             </div>
                             <div className="mt-1 truncate text-xs text-white/55">
-                                {phase === "complete"
-                                    ? summary
-                                    : PHASES[activeIndex]?.detail}
+                                {phase === "complete" ? summary : PHASES[activeIndex]?.detail}
                             </div>
                         </div>
                         {score !== null ? (
@@ -286,10 +285,10 @@ export function ArchitectExperience({
 
                     {plan ? (
                         <div className="mt-3 flex flex-wrap gap-1.5">
-                            <span className="rounded-full border border-white/8 bg-white/[0.025] px-2 py-1 text-[9px] text-white/45">
+                            <span className="rounded-full border border-white/8 bg-white/2.5 px-2 py-1 text-[9px] text-white/45">
                                 {plan.intent.domain}
                             </span>
-                            <span className="rounded-full border border-white/8 bg-white/[0.025] px-2 py-1 text-[9px] text-white/45">
+                            <span className="rounded-full border border-white/8 bg-white/2.5 px-2 py-1 text-[9px] text-white/45">
                                 {plan.intent.scale.toLocaleString()} users
                             </span>
                             {plan.intent.technologies.slice(0, 4).map((technology) => (
@@ -326,14 +325,14 @@ export function ArchitectExperience({
                     </p>
                 </div>
 
-                <div className="overflow-hidden rounded-2xl border border-white/10 bg-[#0b0d11]/[97%] shadow-[0_30px_100px_rgba(0,0,0,0.45)] backdrop-blur-xl sm:rounded-3xl">
+                <div className="overflow-hidden rounded-2xl border border-white/10 bg-[#0b0d11]/97 shadow-[0_30px_100px_rgba(0,0,0,0.45)] backdrop-blur-xl sm:rounded-3xl">
                     <div className="border-b border-white/8 px-3 py-2.5 sm:px-4">
                         <div className="flex items-center justify-between gap-3">
                             <div className="flex items-center gap-2 text-[9px] font-semibold uppercase tracking-[0.16em] text-white/30">
                                 <span className="h-1.5 w-1.5 rounded-full bg-[#d9ff4f]" />
                                 System brief
                             </div>
-                            <span className="text-[9px] text-white/20">
+                            <span className="text-[12px] text-white/20">
                                 Natural language → intent → architecture
                             </span>
                         </div>
@@ -346,10 +345,10 @@ export function ArchitectExperience({
                         maxLength={1200}
                         aria-label="Architecture brief"
                         placeholder="e.g. Build a real-time marketplace for 5M users with payments, chat, search and background jobs…"
-                        className="w-full resize-none bg-transparent px-4 py-4 text-sm leading-6 text-white outline-none placeholder:text-white/20 sm:px-5 sm:text-base"
+                        className="w-full resize-none bg-transparent px-2 md:px-4 py-2 text-xs! leading-6 text-white outline-none placeholder:text-white/20"
                     />
 
-                    <div className="flex flex-col gap-3 border-t border-white/8 px-3 py-3 sm:px-4">
+                    <div className="flex flex-col gap-3 border-t border-white/8 px-2 md:px-4 py-2">
                         <div className="flex flex-wrap gap-1.5">
                             {[
                                 [
@@ -369,7 +368,7 @@ export function ArchitectExperience({
                                     key={label}
                                     type="button"
                                     onClick={() => handleExample(value)}
-                                    className="rounded-full border border-white/8 bg-white/[0.02] px-2.5 py-1.5 text-[9px] font-medium text-white/35 transition hover:border-[#d9ff4f]/20 hover:text-[#d9ff4f]"
+                                    className="rounded-full border border-white/8 bg-white/2 cursor-pointer px-2.5 py-1.5 text-xs! font-medium text-white/35 transition hover:border-[#d9ff4f]/20 hover:text-[#d9ff4f]"
                                 >
                                     {label}
                                 </button>
@@ -377,7 +376,7 @@ export function ArchitectExperience({
                         </div>
 
                         <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-                            <div className="text-[9px] leading-4 text-white/25">
+                            <div className="text-[12px] leading-4 text-white/25">
                                 Any brief gets a production-oriented baseline. Explicit requirements
                                 specialize the graph automatically.
                             </div>
@@ -385,7 +384,7 @@ export function ArchitectExperience({
                                 type="button"
                                 onClick={runArchitecture}
                                 disabled={!prompt.trim()}
-                                className="rounded-xl bg-[#d9ff4f] px-5 py-3 text-xs font-semibold text-[#08090c] shadow-[0_12px_35px_rgba(217,255,79,0.14)] transition hover:-translate-y-0.5 hover:brightness-105 disabled:cursor-not-allowed disabled:opacity-40"
+                                className="rounded-xl bg-[#d9ff4f] px-4 py-2 text-[13px]! cursor-pointer font-semibold text-[#08090c] shadow-[0_12px_35px_rgba(217,255,79,0.14)] transition hover:-translate-y-0.5 hover:brightness-105 disabled:cursor-not-allowed disabled:opacity-40"
                             >
                                 Architect this →
                             </button>
@@ -397,7 +396,7 @@ export function ArchitectExperience({
                     <button
                         type="button"
                         onClick={onOpenAgent}
-                        className="rounded-xl border border-[#d9ff4f]/15 bg-[#d9ff4f]/5 px-3.5 py-2.5 text-[10px] font-semibold uppercase tracking-[0.08em] text-[#d9ff4f]/75 transition hover:bg-[#d9ff4f]/10"
+                        className="rounded-xl border border-[#d9ff4f]/15 bg-[#d9ff4f]/5 cursor-pointer px-3.5 py-2.5 text-[10px]! font-semibold uppercase tracking-[0.08em] text-[#d9ff4f]/75 transition hover:bg-[#d9ff4f]/10"
                     >
                         Open WebMCP Agent OS
                     </button>
@@ -405,18 +404,18 @@ export function ArchitectExperience({
                         type="button"
                         onClick={onLoadShowcase}
                         disabled={isLoadingShowcase}
-                        className="rounded-xl border border-white/10 bg-white/[0.025] px-3.5 py-2.5 text-[10px] font-semibold uppercase tracking-[0.08em] text-white/45 transition hover:border-white/20 hover:text-white/70 disabled:opacity-50"
+                        className="rounded-xl border border-white/10 bg-white/2.5 px-3.5 cursor-pointer py-2.5 text-[10px]! font-semibold uppercase tracking-[0.08em] text-white/45 transition hover:border-white/20 hover:text-white/70 disabled:opacity-50"
                     >
                         {isLoadingShowcase ? "Loading…" : "Quick visual preset"}
                     </button>
                 </div>
 
-                <div className="mt-5 flex flex-wrap justify-center gap-x-5 gap-y-2 text-[9px] uppercase tracking-[0.12em] text-white/20">
+                <div className="mt-5 flex flex-wrap justify-center gap-x-5 gap-y-2 text-[8px] uppercase tracking-[0.12em] text-white/20">
                     <span>Intent compiler</span>
                     <span>Architecture audit</span>
                     <span>Scale intelligence</span>
                     <span>Implementation starter</span>
-                    <span>47 WebMCP tools · 35 Agent OS</span>
+                    <span>49 WebMCP tools · 37 Agent OS</span>
                 </div>
             </div>
         </div>

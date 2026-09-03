@@ -11,12 +11,13 @@
   },
   "dependencies": {
     "@tailwindcss/vite": "^4.3.3",
+    "@webcontainer/api": "^1.6.4",
     "@xyflow/react": "^12.11.5",
+    "lucide-react": "^1.39.0",
     "react": "^19.2.8",
     "react-dom": "^19.2.8",
     "tailwindcss": "^4.3.3",
-    "zustand": "^5.0.15",
-    "@webcontainer/api": "^1.6.4"
+    "zustand": "^5.0.15"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",

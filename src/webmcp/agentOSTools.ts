@@ -680,7 +680,77 @@ export const AGENT_OS_TOOL_NAMES = [
     "clear_version_analysis",
     "run_production_qa",
     "run_judge_mode",
+    "get_promptflow_capabilities",
+    "build_and_verify_system",
 ] as const;
+
+async function applyArchitectSystemInput(input: ArchitectSystemInput): Promise<{
+    planSource: "agent-plan" | "intent-compiler";
+    request: string;
+    domain: string;
+    targetUsers: number;
+    technologies: string[];
+    requirements: string[];
+    operationsApplied: number;
+    nodeCount: number;
+    connectionCount: number;
+    audit: ReturnType<typeof auditArchitecture>;
+}> {
+    const blueprint = buildAgentArchitectureBlueprint(
+        input.request,
+        input.components,
+        input.connections,
+        input.targetUsers,
+    );
+    const store = useCanvasStore.getState();
+    const validationNodes = input.replaceCurrent ? [] : store.nodes;
+    const validationEdges = input.replaceCurrent ? [] : store.edges;
+    validateTransformOperations(validationNodes, validationEdges, blueprint.operations);
+
+    if (input.replaceCurrent) store.clearCanvas();
+    useCanvasStore.getState().applyTransform(blueprint.operations);
+
+    let operationsApplied = blueprint.operations.length;
+    const scaleTarget = blueprint.targetUsers;
+    if (scaleTarget >= 100_000) {
+        const current = useCanvasStore.getState();
+        const scaleOperations = buildScaleOperations(current.nodes, current.edges, scaleTarget);
+        validateTransformOperations(current.nodes, current.edges, scaleOperations);
+        if (scaleOperations.length > 0) {
+            current.applyTransform(scaleOperations);
+            operationsApplied += scaleOperations.length;
+        }
+    }
+
+    if (input.autoFix) {
+        const current = useCanvasStore.getState();
+        const initialAudit = auditArchitecture(current.nodes, current.edges);
+        const fixOperations = buildFixOperations(current.nodes, current.edges, initialAudit);
+        validateTransformOperations(current.nodes, current.edges, fixOperations);
+        if (fixOperations.length > 0) {
+            current.applyTransform(fixOperations);
+            operationsApplied += fixOperations.length;
+        }
+    }
+
+    useCanvasStore.getState().autoLayout();
+    const finalState = useCanvasStore.getState();
+    const audit = auditArchitecture(finalState.nodes, finalState.edges);
+    finalState.setAudit(audit);
+
+    return {
+        planSource: blueprint.source,
+        request: blueprint.request,
+        domain: blueprint.domain,
+        targetUsers: scaleTarget,
+        technologies: blueprint.technologies,
+        requirements: blueprint.requirements,
+        operationsApplied,
+        nodeCount: finalState.nodes.length,
+        connectionCount: finalState.edges.length,
+        audit,
+    };
+}
 
 export function createAgentOSTools(): WebMCPToolDefinition[] {
     return [
@@ -692,60 +762,10 @@ export function createAgentOSTools(): WebMCPToolDefinition[] {
             annotations: { readOnlyHint: false, destructiveHint: true, idempotentHint: false },
             execute: async (rawInput) => {
                 const input = parseArchitectSystemInput(rawInput);
-                const blueprint = buildAgentArchitectureBlueprint(
-                    input.request,
-                    input.components,
-                    input.connections,
-                    input.targetUsers,
-                );
-                const store = useCanvasStore.getState();
-                const validationNodes = input.replaceCurrent ? [] : store.nodes;
-                const validationEdges = input.replaceCurrent ? [] : store.edges;
-                validateTransformOperations(validationNodes, validationEdges, blueprint.operations);
-
-                if (input.replaceCurrent) store.clearCanvas();
-                useCanvasStore.getState().applyTransform(blueprint.operations);
-
-                let operationsApplied = blueprint.operations.length;
-                const scaleTarget = blueprint.targetUsers;
-                if (scaleTarget >= 100_000) {
-                    const current = useCanvasStore.getState();
-                    const scaleOperations = buildScaleOperations(current.nodes, current.edges, scaleTarget);
-                    validateTransformOperations(current.nodes, current.edges, scaleOperations);
-                    if (scaleOperations.length > 0) {
-                        current.applyTransform(scaleOperations);
-                        operationsApplied += scaleOperations.length;
-                    }
-                }
-
-                if (input.autoFix) {
-                    const current = useCanvasStore.getState();
-                    const initialAudit = auditArchitecture(current.nodes, current.edges);
-                    const fixOperations = buildFixOperations(current.nodes, current.edges, initialAudit);
-                    validateTransformOperations(current.nodes, current.edges, fixOperations);
-                    if (fixOperations.length > 0) {
-                        current.applyTransform(fixOperations);
-                        operationsApplied += fixOperations.length;
-                    }
-                }
-
-                useCanvasStore.getState().autoLayout();
-                const finalState = useCanvasStore.getState();
-                const audit = auditArchitecture(finalState.nodes, finalState.edges);
-                finalState.setAudit(audit);
-
+                const result = await applyArchitectSystemInput(input);
                 return json({
                     message: "Agent OS architecture completed and verified.",
-                    planSource: blueprint.source,
-                    request: blueprint.request,
-                    domain: blueprint.domain,
-                    targetUsers: scaleTarget,
-                    technologies: blueprint.technologies,
-                    requirements: blueprint.requirements,
-                    operationsApplied,
-                    nodeCount: finalState.nodes.length,
-                    connectionCount: finalState.edges.length,
-                    audit,
+                    ...result,
                 });
             },
         },
@@ -1435,6 +1455,74 @@ export function createAgentOSTools(): WebMCPToolDefinition[] {
                 const run = await runFinalWowDemo(state.nodes, state.edges, targetUsers);
                 useCanvasStore.getState().setFinalWow(run);
                 return json({ run });
+            },
+        },
+        {
+            name: AGENT_OS_TOOL_NAMES[35],
+            title: "Get PromptFlow agent capabilities",
+            description: "Read the recommended WebMCP operating contract for PromptFlow. Use this when an agent needs to understand how humans, ChatGPT, WebMCP, PromptFlow's deterministic engine, WebContainer execution, and Judge Mode fit together. No external model API is required inside PromptFlow: the calling AI agent supplies semantic reasoning and PromptFlow supplies validated execution.",
+            inputSchema: EMPTY_SCHEMA,
+            annotations: { readOnlyHint: true, destructiveHint: false, idempotentHint: true },
+            execute: async () => json({
+                product: "PromptFlow.ai",
+                role: "WebMCP-native software architecture and execution environment for AI agents",
+                recommendedPrimaryTool: "build_and_verify_system",
+                semanticReasoningOwner: "calling AI agent (for example ChatGPT)",
+                deterministicExecutionOwner: "PromptFlow",
+                runtimeProof: "browser-native WebContainer",
+                verification: "Judge Mode + production QA",
+                workflow: [
+                    "human describes the software intent",
+                    "AI agent infers a structured component and connection plan",
+                    "build_and_verify_system validates and materializes the architecture",
+                    "PromptFlow generates inspectable project artifacts",
+                    "WebContainer installs, tests, builds, and starts the generated project",
+                    "Judge Mode breaks, diagnoses, hardens, re-tests, and produces a release verdict",
+                ],
+                guidance: "For arbitrary briefs, provide components and connections when semantic domain knowledge matters. Omit them only when the local deterministic intent compiler is sufficient.",
+            }),
+        },
+        {
+            name: AGENT_OS_TOOL_NAMES[36],
+            title: "Build and verify a complete software system",
+            description: "RECOMMENDED ONE-CALL WebMCP workflow. Turn an arbitrary human software brief into a live architecture and a verified generated project. The calling AI agent should infer semantic components/connections when needed; PromptFlow validates and applies the plan, performs deterministic structural repair and scaling, then runs the full Judge Mode pipeline: architecture intelligence, digital-twin failure injection, hardening, re-test, code generation, real WebContainer install/test/build/runtime verification, production QA, and final verdict. Use this instead of chaining many tools when the user asks to create and prove a complete system.",
+            inputSchema: ARCHITECT_SYSTEM_SCHEMA,
+            annotations: { readOnlyHint: false, destructiveHint: true, idempotentHint: false },
+            execute: async (rawInput) => {
+                const input = parseArchitectSystemInput(rawInput);
+                const architecture = await applyArchitectSystemInput(input);
+                const current = useCanvasStore.getState();
+                const verification = await runFinalWowDemo(
+                    current.nodes,
+                    current.edges,
+                    Math.min(Math.max(architecture.targetUsers, 1), 1_000_000_000),
+                );
+                useCanvasStore.getState().setFinalWow(verification);
+
+                const finalState = useCanvasStore.getState();
+                const finalAudit = auditArchitecture(finalState.nodes, finalState.edges);
+                finalState.setAudit(finalAudit);
+                return json({
+                    message: verification.status === "completed"
+                        ? "Complete system architected, generated, executed, and verified."
+                        : "System architecture and verification workflow completed with release issues to inspect.",
+                    planSource: architecture.planSource,
+                    request: architecture.request,
+                    domain: architecture.domain,
+                    targetUsers: architecture.targetUsers,
+                    technologies: architecture.technologies,
+                    requirements: architecture.requirements,
+                    nodeCount: finalState.nodes.length,
+                    connectionCount: finalState.edges.length,
+                    architectureAudit: finalAudit,
+                    generatedArtifacts: finalState.codeGeneration?.artifacts.length ?? 0,
+                    executionStatus: verification.execution?.status ?? "not-run",
+                    healingAttempts: verification.execution?.healingAttempts.length ?? 0,
+                    qaStatus: verification.qa?.status ?? "not-run",
+                    qaScore: verification.qa?.score ?? 0,
+                    verdict: verification.headline,
+                    scorecard: verification.scorecard,
+                });
             },
         },
     ];

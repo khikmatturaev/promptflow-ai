@@ -1,3 +1,4 @@
+import { XIcon } from "lucide-react";
 import type { DigitalTwinReport, DigitalTwinScenarioResult } from "../types/digitalTwin";
 
 interface ArchitectureSimulationPanelProps {
@@ -23,7 +24,7 @@ export function ArchitectureSimulationPanel({
     onClose,
 }: ArchitectureSimulationPanelProps) {
     return (
-        <aside className="pointer-events-auto absolute bottom-3 left-3 z-30 max-h-[calc(100%-6rem)] w-[min(440px,calc(100%-1.5rem))] overflow-y-auto rounded-2xl border border-[#d9ff4f]/15 bg-[#0a0c10]/95 p-4 shadow-2xl backdrop-blur-xl sm:bottom-5 sm:left-5 sm:w-[440px]">
+        <aside className="pf-modal pointer-events-auto absolute bottom-3 left-3 z-30 max-h-[calc(100%-6rem)] w-[min(400px,calc(100%-1.5rem))] overflow-y-auto rounded-lg border border-[#d9ff4f]/15 bg-[#0a0c10]/95 p-2 backdrop-blur-xl sm:bottom-5 sm:left-5 sm:w-110">
             <div className="flex items-start justify-between gap-4">
                 <div>
                     <div className="text-[9px] font-semibold uppercase tracking-[0.18em] text-[#d9ff4f]/65">
@@ -39,32 +40,33 @@ export function ArchitectureSimulationPanel({
                 <button
                     type="button"
                     onClick={onClose}
-                    className="rounded-lg border border-white/10 px-2 py-1 text-[10px] text-white/45 transition hover:bg-white/5 hover:text-white"
-                    aria-label="Close digital twin panel"
+                    aria-label="Close architecture audit"
+                    title="Close"
+                    className="flex w-7 shrink-0 items-center justify-center rounded-md border border-white/10 text-white/45 transition hover:bg-white/5 hover:text-white cursor-pointer"
                 >
-                    Close
+                    <XIcon size={14} />
                 </button>
             </div>
 
             <div className="mt-4 grid grid-cols-3 gap-2">
-                <div className="rounded-xl border border-white/8 bg-white/[0.025] p-2.5">
+                <div className="rounded-lg border border-white/8 bg-white/2 p-2">
                     <div className="text-[9px] uppercase tracking-[0.12em] text-white/30">Baseline</div>
                     <div className={`mt-1 text-lg font-semibold ${scoreClass(report.baselineScore)}`}>
                         {report.baselineScore}
                     </div>
                 </div>
-                <div className="rounded-xl border border-white/8 bg-white/[0.025] p-2.5">
+                <div className="rounded-lg border border-white/8 bg-white/2 p-2">
                     <div className="text-[9px] uppercase tracking-[0.12em] text-white/30">Scenarios</div>
                     <div className="mt-1 text-lg font-semibold text-white">{report.scenarios.length}</div>
                 </div>
-                <div className="rounded-xl border border-white/8 bg-white/[0.025] p-2.5">
+                <div className="rounded-lg border border-white/8 bg-white/2 p-2">
                     <div className="text-[9px] uppercase tracking-[0.12em] text-white/30">SPOF</div>
                     <div className="mt-1 text-lg font-semibold text-white">{report.singlePointsOfFailure.length}</div>
                 </div>
             </div>
 
             {report.loadProfile ? (
-                <div className="mt-3 rounded-xl border border-white/8 bg-white/[0.025] p-3">
+                <div className="mt-2 rounded-lg border border-white/8 bg-white/2 p-2">
                     <div className="text-[9px] font-semibold uppercase tracking-[0.14em] text-white/35">
                         Load profile
                     </div>
@@ -76,9 +78,9 @@ export function ArchitectureSimulationPanel({
                 </div>
             ) : null}
 
-            <div className="mt-4 space-y-2">
+            <div className="mt-2 space-y-2">
                 {report.scenarios.map((item) => (
-                    <section key={`${item.event.kind}-${item.event.targetNodeId ?? "system"}-${item.event.label}`} className="rounded-xl border border-white/8 bg-white/[0.02] p-3">
+                    <section key={`${item.event.kind}-${item.event.targetNodeId ?? "system"}-${item.event.label}`} className="rounded-xl border border-white/8 bg-white/2 p-2">
                         <div className="flex items-center justify-between gap-3">
                             <div className="text-[11px] font-medium text-white/80">{item.event.label}</div>
                             <div className={`text-[9px] font-semibold uppercase tracking-[0.12em] ${gradeClass(item.grade)}`}>

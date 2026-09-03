@@ -64,7 +64,7 @@ export function ArchitectureInspector({
     };
 
     return (
-        <aside className="absolute right-3 top-3 z-30 flex max-h-[calc(100%-1.5rem)] w-[min(380px,calc(100%-1.5rem))] flex-col overflow-hidden rounded-2xl border border-white/10 bg-[#0d0f14]/[98%] shadow-2xl backdrop-blur-xl sm:right-4 sm:top-4 sm:max-h-[calc(100%-2rem)]">
+        <aside className="pf-modal pf-modal-top absolute right-3 top-3 z-30 flex max-h-[calc(100%-1.5rem)] w-[min(380px,calc(100%-1.5rem))] flex-col overflow-hidden rounded-2xl border border-white/10 bg-[#0d0f14]/[98%] shadow-2xl backdrop-blur-xl sm:right-4 sm:top-4 sm:max-h-[calc(100%-2rem)]">
             <div className="flex items-start justify-between gap-4 border-b border-white/10 px-4 py-4">
                 <div className="min-w-0">
                     <div className="flex items-center gap-2 text-[10px] font-semibold uppercase tracking-[0.18em] text-[#d9ff4f]/70">

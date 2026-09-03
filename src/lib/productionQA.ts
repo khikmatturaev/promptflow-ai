@@ -35,9 +35,13 @@ const EXPECTED_AGENT_OS_TOOLS = [
     "plan_architecture_migration",
     "restore_architecture_version",
     "clear_version_analysis",
+    "run_production_qa",
+    "run_judge_mode",
+    "get_promptflow_capabilities",
+    "build_and_verify_system",
 ] as const;
 
-const EXPECTED_TOTAL_TOOLS = 47;
+const EXPECTED_TOTAL_TOOLS = 49;
 const MAX_ARTIFACT_BYTES = 2_000_000;
 const MAX_GRAPH_NODES = 120;
 const MAX_GRAPH_CONNECTIONS = 300;

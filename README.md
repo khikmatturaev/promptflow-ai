@@ -35,6 +35,39 @@ Audit / Fix / Scale / Verify
 
 The important separation is intentional: **ChatGPT handles open-ended semantic reasoning; PromptFlow owns the structured execution contract, validation, state, deterministic intelligence, and visualization.** This makes arbitrary briefs possible without pretending that a browser-only keyword parser is a general-purpose LLM.
 
+## Recommended hackathon agent path
+
+PromptFlow does **not** require a second model API inside the application for the WebMCP challenge. The clean separation is:
+
+```text
+Human intent
+   ↓
+ChatGPT / calling AI agent
+   ↓ semantic reasoning + tool choice
+WebMCP
+   ↓ structured tool call
+PromptFlow deterministic architecture engine
+   ↓ validated graph + code generation
+WebContainer
+   ↓ install → test → build → runtime
+Judge Mode
+   ↓ break → diagnose → heal → re-test → QA → verdict
+```
+
+For a complete arbitrary brief, the recommended tool is **`build_and_verify_system`**. The calling agent should infer `components` and `connections` when the brief requires semantic domain understanding. PromptFlow then validates the plan and performs the complete architecture-to-proof pipeline in one WebMCP round-trip.
+
+Use **`get_promptflow_capabilities`** when the agent needs to discover the intended division of responsibility and the recommended primary workflow.
+
+This means PromptFlow is not an LLM wrapper: the AI agent supplies open-ended interpretation, while PromptFlow owns state, validation, deterministic architecture intelligence, project generation, browser-native execution, failure hardening, QA, and the final release verdict.
+
+### One-call judge demo
+
+In ChatGPT's in-app browser, open the live PromptFlow URL and ask:
+
+> Use PromptFlow's `build_and_verify_system` WebMCP tool to design and verify a production-ready marketplace for 1 million users with authentication, payments, realtime chat, object storage, background jobs, observability, and a PostgreSQL data layer. Infer a complete component and connection plan. Then summarize the architecture, execution result, QA score, and final verdict.
+
+The canvas and Agent OS activity feed are driven by real WebMCP tool execution. The generated Node/React project is executed in WebContainer; the host page never executes generated source directly.
+
 ## CORE 3 — Architecture Intelligence
 
 CORE 3 moves PromptFlow beyond a structural graph check into an architecture-review brain. It evaluates the live system across:
@@ -55,7 +88,7 @@ CORE 3 moves PromptFlow beyond a structural graph check into an architecture-rev
 22. `get_architecture_dna` — return the architecture's structural fingerprint and system archetype.
 23. `apply_intelligence_recommendations` — validate and apply selected safe recommendations, then re-assess the live graph.
 
-The original 12 atomic tools remain available alongside the Agent OS surface. The total is now **47 WebMCP tools: 35 Agent OS + 12 atomic**.
+The original 12 atomic tools remain available alongside the Agent OS surface. The total is now **49 WebMCP tools: 37 Agent OS + 12 atomic**.
 
 The intelligence layer is deliberately transparent: its scores are **heuristic architecture-planning signals**, not penetration tests, production load tests, SLO guarantees, or capacity certifications. Real agents can combine these signals with domain knowledge and actual infrastructure telemetry.
 
@@ -142,7 +175,7 @@ If the agent does not provide a component plan, `architect_system` falls back to
 - Ordered implementation planning
 - Batch `transform_architecture` for precise AI follow-up edits
 - Real WebMCP execution telemetry with duration/failure state
-- 47 total WebMCP tools: 35 Agent OS + 12 atomic tools
+- 49 total WebMCP tools: 37 Agent OS + 12 atomic tools
 - No backend/API dependency required for the MVP execution layer
 
 ## Real Agent OS demo
@@ -150,7 +183,7 @@ If the agent does not provide a component plan, `architect_system` falls back to
 1. Run PromptFlow.
 2. Open the page in ChatGPT's built-in browser and allow site access.
 3. Open **Agent** / **WebMCP Agent OS**.
-4. Confirm the panel reports **7/7 OS** tools.
+4. Confirm WebMCP is active and the Agent OS tool surface is discovered.
 5. Use the demo prompt:
 
 > Use PromptFlow's high-level Agent OS tools. Design a production-ready TikTok-like platform for 10 million users with video uploads, recommendations, realtime messaging, authentication, CDN/media storage, background processing, and analytics. Build it on the canvas, analyze it, recommend improvements, simulate 10M-user scale, apply the useful recommendations, then explain the final architecture.
@@ -225,7 +258,7 @@ The Agent OS now includes:
 - `restore_architecture_version`
 - `clear_version_analysis`
 
-This brings the total to **47 WebMCP tools: 35 Agent OS + 12 atomic**.
+This brings the total to **49 WebMCP tools: 37 Agent OS + 12 atomic**.
 
 ## Local development
 
@@ -444,7 +477,7 @@ Python projects remain static-preflight only in CORE 8; Node.js and React/Vite p
 - `run_project_execution_loop` — run install → test → build with bounded self-healing.
 - `diagnose_execution_failure` — expose the latest execution diagnosis without mutating the project.
 
-The current WebMCP surface is **47 tools: 35 Agent OS + 12 atomic**.
+The current WebMCP surface is **49 tools: 37 Agent OS + 12 atomic**.
 
 ### Runtime requirements
 
@@ -464,7 +497,7 @@ The final release gate adds a deterministic `run_production_qa` Agent OS tool an
 - real WebContainer execution status
 - architecture version/checkpoint integrity
 
-The final WebMCP surface is **47 tools: 35 Agent OS + 12 atomic**.
+The final WebMCP surface is **49 tools: 37 Agent OS + 12 atomic**.
 
 Production QA is intentionally a release gate, not a security certification. Heuristic code review and browser-side checks should be complemented by the project's real CI, dependency scanning, secret scanning, and deployment controls before production use.
 
@@ -479,4 +512,4 @@ Brief → Reason → Architect → Break → Diagnose → Heal → Re-test
 
 Judge Mode deliberately injects severe traffic and compute failure, identifies the resulting bottlenecks, applies bounded hardening operations, re-runs the same digital-twin scenario, generates a project workspace, executes the real browser sandbox build loop with bounded self-healing, and finishes with the production QA gate. The UI exposes live stage state plus a before/after scorecard so the reasoning is visible rather than hidden behind a final diagram.
 
-The final WebMCP surface is **47 tools: 35 Agent OS + 12 atomic**, including `run_judge_mode`.
+The final WebMCP surface is **49 tools: 37 Agent OS + 12 atomic**, including `run_judge_mode`.

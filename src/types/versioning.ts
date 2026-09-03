@@ -1,4 +1,4 @@
-import type { ArchitectureEdge, ArchitectureNode, ArchitectureNodeType } from "./index";
+import type { ArchitectureEdge, ArchitectureNode } from "./index";
 
 export interface ArchitectureVersionSnapshot {
     id: string;

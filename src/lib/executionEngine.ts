@@ -19,6 +19,7 @@ const DEFAULT_OPTIONS: Required<ExecutionLoopOptions> = {
 };
 
 let webContainerPromise: Promise<WebContainer> | null = null;
+let activeRuntimeProcess: WebContainerProcess | null = null;
 
 function capability(): ExecutionCapability {
     if (typeof window === "undefined") {
@@ -57,6 +58,26 @@ async function getWebContainer(): Promise<WebContainer> {
         });
     }
     return webContainerPromise;
+}
+
+function stopActiveRuntime(): void {
+    if (!activeRuntimeProcess) return;
+    try {
+        activeRuntimeProcess.kill();
+    } catch {
+        // The runtime may already have exited; cleanup is best-effort.
+    }
+    activeRuntimeProcess = null;
+}
+
+async function resetWorkspace(container: WebContainer): Promise<void> {
+    stopActiveRuntime();
+    const entries = await container.fs.readdir(".");
+    for (const entry of entries) {
+        const name = typeof entry === "string" ? entry : (entry as { name: string }).name.toString();
+        if (!name || name === "." || name === "..") continue;
+        await container.fs.rm(name, { recursive: true, force: true });
+    }
 }
 
 function isSafeArtifactPath(path: string): boolean {
@@ -125,8 +146,6 @@ async function runProcess(
 ): Promise<{ exitCode: number; output: string; timedOut: boolean }> {
     let process: WebContainerProcess;
     try {
-        // Execute from the WebContainer workdir itself. The generated project is
-        // mounted at that root, which is the same location npm resolves by default.
         process = await container.spawn(command, args);
     } catch (error: unknown) {
         return {
@@ -135,45 +154,75 @@ async function runProcess(
             timedOut: false,
         };
     }
+
     let output = "";
     const reader = process.output.getReader();
-    let reading = true;
 
-    const readOutput = async (): Promise<void> => {
-        while (reading) {
-            const result = await reader.read();
-            if (result.done) break;
-            output += result.value;
+    // WebContainer exposes stdout/stderr through one output stream. Keep reading
+    // until the stream closes; never release the reader while a read() is pending.
+    // The previous implementation stopped reading as soon as process.exit resolved,
+    // which could discard the actual npm error and leave the UI with only "FAILED".
+    const outputPromise = (async (): Promise<void> => {
+        try {
+            while (true) {
+                const result = await reader.read();
+                if (result.done) break;
+                if (result.value) output += result.value;
+            }
+        } catch (error: unknown) {
+            const message = errorMessage(error);
+            output += `\n[promptflow] Output stream error: ${message}`;
+        } finally {
+            try {
+                reader.releaseLock();
+            } catch {
+                // Best-effort stream cleanup.
+            }
         }
-    };
+    })();
 
-    const outputPromise = readOutput().catch(() => undefined);
-    let timedOut = false;
     let timer: number | undefined;
-
-    const exitPromise = process.exit;
     const timeoutPromise = new Promise<"timeout">((resolve) => {
         timer = window.setTimeout(() => resolve("timeout"), timeoutMs);
     });
 
+    const exitPromise = process.exit;
     const result = await Promise.race([exitPromise, timeoutPromise]);
     if (timer !== undefined) window.clearTimeout(timer);
 
+    let timedOut = false;
+    let exitCode: number;
+
     if (result === "timeout") {
         timedOut = true;
-        process.kill();
-        await Promise.race([exitPromise, new Promise((resolve) => window.setTimeout(resolve, 1_000))]);
+        try {
+            process.kill();
+        } catch {
+            // The process may have exited between the timeout and kill().
+        }
+        exitCode = 124;
+        await Promise.race([
+            exitPromise,
+            new Promise<void>((resolve) => window.setTimeout(resolve, 2_000)),
+        ]);
+    } else {
+        exitCode = result;
     }
 
-    reading = false;
-    reader.releaseLock();
-    await outputPromise;
+    // Give the output stream a short grace period to flush the final stderr/stdout
+    // chunk after process.exit resolves. This is essential for actionable diagnostics.
+    await Promise.race([
+        outputPromise,
+        new Promise<void>((resolve) => window.setTimeout(resolve, 2_000)),
+    ]);
+
+    const finalOutput = clipOutput(output || "(command produced no stdout/stderr)");
 
     return {
-        exitCode: timedOut ? 124 : (result as number),
+        exitCode,
         output: timedOut
-            ? `${clipOutput(output)}\n[promptflow] Command timed out after ${timeoutMs}ms and was terminated.`
-            : clipOutput(output),
+            ? `${finalOutput}\n[promptflow] Command timed out after ${timeoutMs}ms and was terminated.`
+            : finalOutput,
         timedOut,
     };
 }
@@ -476,21 +525,15 @@ async function startRuntime(
 ): Promise<{ step: ExecutionStep; previewUrl?: string }> {
     const startedAt = Date.now();
     let previewUrl: string | undefined;
-    let resolveReady: ((url: string) => void) | null = null;
-    const readyPromise = new Promise<string>((resolve) => {
-        resolveReady = resolve;
-    });
-    const unsubscribe = container.on("server-ready", (_port, url) => {
-        if (!previewUrl) {
-            previewUrl = url;
-            resolveReady?.(url);
-        }
-    });
     let process: WebContainerProcess;
+
+    const outputChunks: string[] = [];
+    let outputReader: ReadableStreamDefaultReader<string> | null = null;
+
     try {
         process = await container.spawn("npm", ["run", "start", "--", "--host", "0.0.0.0"]);
+        outputReader = process.output.getReader();
     } catch (error: unknown) {
-        unsubscribe();
         return {
             step: {
                 id: `runtime-${startedAt}`,
@@ -503,6 +546,40 @@ async function startRuntime(
             },
         };
     }
+
+    const readOutput = async (): Promise<void> => {
+        if (!outputReader) return;
+        try {
+            while (true) {
+                const result = await outputReader.read();
+                if (result.done) break;
+                if (result.value) outputChunks.push(result.value);
+            }
+        } catch (error: unknown) {
+            outputChunks.push(`\n[promptflow] Runtime output stream error: ${errorMessage(error)}`);
+        } finally {
+            try {
+                outputReader.releaseLock();
+            } catch {
+                // Best-effort stream cleanup.
+            }
+            outputReader = null;
+        }
+    };
+
+    const outputPromise = readOutput();
+
+    let resolveReady: ((url: string) => void) | null = null;
+    const readyPromise = new Promise<string>((resolve) => {
+        resolveReady = resolve;
+    });
+    const unsubscribe = container.on("server-ready", (_port, url) => {
+        if (!previewUrl) {
+            previewUrl = url;
+            resolveReady?.(url);
+        }
+    });
+
     const timeout = new Promise<"timeout">((resolve) => {
         window.setTimeout(() => resolve("timeout"), timeoutMs);
     });
@@ -512,7 +589,20 @@ async function startRuntime(
     unsubscribe();
 
     if (result === "timeout") {
-        process.kill();
+        try {
+            process.kill();
+        } catch {
+            // Best-effort termination.
+        }
+        await Promise.race([
+            exit,
+            new Promise<void>((resolve) => window.setTimeout(resolve, 2_000)),
+        ]);
+        await Promise.race([
+            outputPromise,
+            new Promise<void>((resolve) => window.setTimeout(resolve, 2_000)),
+        ]);
+        const output = clipOutput(outputChunks.join("") || "(runtime produced no stdout/stderr)");
         return {
             step: {
                 id: `runtime-${startedAt}`,
@@ -521,12 +611,17 @@ async function startRuntime(
                 status: "failed",
                 exitCode: 124,
                 durationMs: elapsed(startedAt),
-                output: "Runtime server did not announce readiness within the timeout.",
+                output: `${output}\n[promptflow] Runtime server did not announce readiness within ${timeoutMs}ms.`,
             },
         };
     }
 
     if ("exitCode" in result) {
+        await Promise.race([
+            outputPromise,
+            new Promise<void>((resolve) => window.setTimeout(resolve, 2_000)),
+        ]);
+        const output = clipOutput(outputChunks.join("") || "(runtime produced no stdout/stderr)");
         return {
             step: {
                 id: `runtime-${startedAt}`,
@@ -535,10 +630,15 @@ async function startRuntime(
                 status: "failed",
                 exitCode: result.exitCode,
                 durationMs: elapsed(startedAt),
-                output: "Runtime process exited before the WebContainer server-ready event.",
+                output: `${output}\n[promptflow] Runtime process exited before the WebContainer server-ready event.`,
             },
         };
     }
+
+    activeRuntimeProcess = process;
+    void process.exit.finally(() => {
+        if (activeRuntimeProcess === process) activeRuntimeProcess = null;
+    });
 
     return {
         previewUrl: result.url,
@@ -548,7 +648,7 @@ async function startRuntime(
             command: "npm run start -- --host 0.0.0.0",
             status: "passed",
             durationMs: elapsed(startedAt),
-            output: `Runtime server ready at ${result.url}`,
+            output: `Runtime server ready at ${result.url}${outputChunks.length ? `\n${clipOutput(outputChunks.join(""), 4_000)}` : ""}`,
         },
     };
 }
@@ -617,6 +717,10 @@ export async function executeProject(
             // Keep the generated project at the WebContainer workdir root.
             // WebContainers execute `spawn()` from that same workdir by default, and npm
             // therefore resolves /package.json without any cwd/mountPoint translation.
+            // WebContainer.boot() is intentionally singleton-scoped, so every execution
+            // attempt must start from a clean workdir. mount() overlays files and does
+            // not remove stale source/config/node_modules from previous prompts.
+            await resetWorkspace(container);
             await container.mount(toTree(currentProject.artifacts));
 
             const manifest = await container.fs.readFile("/package.json", "utf-8");

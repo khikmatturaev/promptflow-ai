@@ -111,15 +111,20 @@ for (const file of entries) {
   }
 }
 
-if (failures > 0) {
-  process.exitCode = 1;
-} else {
+const exitCode = failures > 0 ? 1 : 0;
+if (exitCode === 0) {
   console.log(\`PromptFlow tests passed: \${entries.length}/\${entries.length}\`);
 }
-`;
+
+// Generated application modules may initialize long-lived handles (for example
+// an HTTP listener) during import. process.exitCode alone waits for those handles,
+// which can keep npm test alive after every smoke test has already passed. All
+// test imports above are awaited, so an explicit exit here is deterministic.
+process.exit(exitCode);`;
 }
 
 function packageJson(name: string, runtime: string, stack: string[], hasReact: boolean): string {
+    // function packageJson(name: string, stack: string[], hasReact: boolean): string {
     const dependencies: Record<string, string> = hasReact ? { react: "^19.2.8", "react-dom": "^19.2.8" } : {};
     if (stack.includes("Express")) dependencies.express = "^5.2.1";
     if (stack.includes("Fastify")) dependencies.fastify = "^5.0.0";
@@ -257,7 +262,7 @@ export function validateGeneratedProject(result: ProjectGenerationResult): Proje
         buildReady: !blocked,
         runReady: !blocked && result.entrypoints.length > 0,
         checks,
-        commands: ["npm install", "npm test", "npm run build", "npm run dev"],
+        commands: ["npm install --no-audit --no-fund", "npm test", "npm run build", "npm run start"],
         missingCapabilities,
     };
 }

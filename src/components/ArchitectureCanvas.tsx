@@ -114,6 +114,7 @@ export function ArchitectureCanvas() {
     const autoLayout = useCanvasStore((state) => state.autoLayout);
     const layoutRevision = useCanvasStore((state) => state.layoutRevision);
     const clearAgentToolCalls = useCanvasStore((state) => state.clearAgentToolCalls);
+    const clearCanvas = useCanvasStore((state) => state.clearCanvas);
     const applyTransform = useCanvasStore((state) => state.applyTransform);
     const [showAgentDemo, setShowAgentDemo] = useState(false);
     const [showVersioning, setShowVersioning] = useState(false);
@@ -299,41 +300,49 @@ export function ArchitectureCanvas() {
         setShowAgentDemo(true);
     }, [clearAgentToolCalls]);
 
+    const handleResetWorkspace = useCallback(() => {
+        clearCanvas();
+        setShowVersioning(false);
+        setShowJudgeMode(false);
+        setShowProductionQA(false);
+        setShowAgentDemo(false);
+    }, [clearCanvas]);
+
     return (
-        <div className="architecture-canvas-shell relative h-[calc(100vh-7.25rem)] min-h-[560px] w-full overflow-hidden rounded-2xl border border-white/10 bg-[#08090c] shadow-[0_20px_80px_rgba(0,0,0,0.25)] sm:h-[calc(100vh-8rem)] sm:min-h-[620px] sm:rounded-3xl">
+        <div className="pf-canvas-shell architecture-canvas-shell relative h-full min-h-0 w-full overflow-hidden rounded-2xl border border-white/10 bg-[#08090c] shadow-[0_20px_80px_rgba(0,0,0,0.25)] sm:rounded-3xl">
             <div className="pointer-events-none absolute inset-x-0 top-0 z-10 flex items-start justify-between gap-3 p-3 sm:p-5">
-                <div className="min-w-0">
+                <div className="min-w-0 flex flex-col gap-1">
                     <div className="flex items-center gap-2">
                         <span className="h-1.5 w-1.5 rounded-full bg-[#d9ff4f] shadow-[0_0_9px_rgba(217,255,79,0.65)]" />
                         <div className="text-[9px] font-semibold uppercase tracking-[0.2em] text-white/35 sm:text-[10px]">
                             Live Architecture
                         </div>
                     </div>
-                    <div className="mt-1 text-xs font-medium text-white/75 sm:text-sm">
+                    <div className="text-xs font-medium text-white/75 sm:text-sm">
                         PromptFlow Canvas
                     </div>
-                </div>
-
-                <div className="pointer-events-auto flex max-w-[calc(100%-90px)] flex-wrap items-center justify-end gap-1.5 sm:max-w-none sm:gap-2">
                     <div
                         title={`${nodes.length} architecture components`}
-                        className="rounded-full border border-white/10 bg-black/35 px-2.5 py-1.5 text-[9px] font-medium uppercase tracking-[0.1em] text-white/40 backdrop-blur sm:px-3 sm:text-[10px]"
+                        className="rounded-lg border border-white/10 bg-black/35 px-2.5 py-1 text-[9px]! font-medium uppercase tracking-widest text-white/40 backdrop-blur sm:px-3"
                     >
                         {nodes.length} {nodes.length === 1 ? "node" : "nodes"}
                     </div>
                     <div
                         title={`${edges.length} architecture relationships`}
-                        className="rounded-full border border-white/10 bg-black/35 px-2.5 py-1.5 text-[9px] font-medium uppercase tracking-[0.1em] text-white/40 backdrop-blur sm:px-3 sm:text-[10px]"
+                        className="rounded-lg border border-white/10 bg-black/35 px-2.5 py-1 text-[9px]! font-medium uppercase tracking-widest text-white/40 backdrop-blur sm:px-3"
                     >
                         {edges.length} {edges.length === 1 ? "connection" : "connections"}
                     </div>
+                </div>
+
+                <div className="pf-toolbar pointer-events-auto flex max-w-[calc(100%-90px)] flex-wrap items-center justify-end gap-1.5 sm:max-w-none sm:gap-2">
                     {nodes.length === 0 ? (
                         <button
                             type="button"
                             onClick={handleLoadShowcase}
                             disabled={isLoadingShowcase}
                             title="Load a polished local showcase architecture"
-                            className="rounded-full border border-white/10 bg-black/35 px-2.5 py-1.5 text-[9px] font-medium uppercase tracking-[0.1em] text-white/50 backdrop-blur transition hover:border-[#d9ff4f]/20 hover:bg-white/5 hover:text-[#d9ff4f] disabled:cursor-wait disabled:opacity-50 sm:px-3 sm:text-[10px]"
+                            className="rounded-lg cursor-pointer border border-white/10 bg-black/35 px-2.5 py-1.5 text-[9px]! font-medium uppercase tracking-widest text-white/50 backdrop-blur transition hover:border-[#d9ff4f]/20 hover:bg-white/5 hover:text-[#d9ff4f] disabled:cursor-wait disabled:opacity-50 sm:px-3"
                         >
                             {isLoadingShowcase ? "Loading…" : "Showcase"}
                         </button>
@@ -342,7 +351,7 @@ export function ArchitectureCanvas() {
                         type="button"
                         onClick={autoLayout}
                         title="Arrange the architecture automatically"
-                        className="rounded-full border border-white/10 bg-black/35 px-2.5 py-1.5 text-[9px] font-medium uppercase tracking-[0.1em] text-white/45 backdrop-blur transition hover:border-white/20 hover:bg-white/5 hover:text-white sm:px-3 sm:text-[10px]"
+                        className="rounded-lg cursor-pointer border border-white/10 bg-black/35 px-2.5 py-1.5 text-[9px]! font-medium uppercase tracking-widest text-white/45 backdrop-blur transition hover:border-white/20 hover:bg-white/5 hover:text-white sm:px-3"
                     >
                         Layout
                     </button>
@@ -351,7 +360,7 @@ export function ArchitectureCanvas() {
                         onClick={handleAudit}
                         disabled={isAuditing}
                         title="Run a structural architecture audit"
-                        className="rounded-full border border-[#d9ff4f]/15 bg-[#d9ff4f]/5 px-2.5 py-1.5 text-[9px] font-medium uppercase tracking-[0.1em] text-[#d9ff4f]/70 backdrop-blur transition hover:bg-[#d9ff4f]/10 disabled:cursor-wait disabled:opacity-50 sm:px-3 sm:text-[10px]"
+                        className="rounded-lg cursor-pointer border border-[#d9ff4f]/15 bg-[#d9ff4f]/5 px-2.5 py-1.5 text-[9px]! font-medium uppercase tracking-widest text-[#d9ff4f]/70 backdrop-blur transition hover:bg-[#d9ff4f]/10 disabled:cursor-wait disabled:opacity-50 sm:px-3"
                     >
                         {isAuditing ? "Auditing…" : "Audit"}
                     </button>
@@ -360,7 +369,7 @@ export function ArchitectureCanvas() {
                         onClick={intelligence ? clearIntelligence : handleIntelligence}
                         title="Run the production architecture intelligence assessment"
                         aria-pressed={Boolean(intelligence)}
-                        className={`rounded-full border px-2.5 py-1.5 text-[9px] font-medium uppercase tracking-[0.1em] backdrop-blur transition sm:px-3 sm:text-[10px] ${intelligence
+                        className={`rounded-lg cursor-pointer border px-2.5 py-1.5 text-[9px]! font-medium uppercase tracking-widest backdrop-blur transition sm:px-3 ${intelligence
                             ? "border-[#d9ff4f]/30 bg-[#d9ff4f]/10 text-[#d9ff4f]"
                             : "border-[#d9ff4f]/15 bg-[#d9ff4f]/5 text-[#d9ff4f]/65 hover:bg-[#d9ff4f]/10"
                             }`}
@@ -372,7 +381,7 @@ export function ArchitectureCanvas() {
                         onClick={digitalTwin ? clearDigitalTwin : handleQuickSimulation}
                         title="Run a non-destructive digital twin load simulation"
                         aria-pressed={Boolean(digitalTwin)}
-                        className={`rounded-full border px-2.5 py-1.5 text-[9px] font-medium uppercase tracking-[0.1em] backdrop-blur transition sm:px-3 sm:text-[10px] ${digitalTwin
+                        className={`rounded-lg cursor-pointer border px-2.5 py-1.5 text-[9px]! font-medium uppercase tracking-widest backdrop-blur transition sm:px-3 ${digitalTwin
                             ? "border-sky-300/25 bg-sky-300/10 text-sky-200"
                             : "border-sky-300/15 bg-sky-300/5 text-sky-200/65 hover:bg-sky-300/10"
                             }`}
@@ -384,7 +393,7 @@ export function ArchitectureCanvas() {
                         onClick={codeGeneration ? clearCodeGeneration : handleGenerateProject}
                         title="Generate a bounded project scaffold and execution preflight"
                         aria-pressed={Boolean(codeGeneration)}
-                        className={`rounded-full border px-2.5 py-1.5 text-[9px] font-medium uppercase tracking-[0.1em] backdrop-blur transition sm:px-3 sm:text-[10px] ${codeGeneration
+                        className={`rounded-lg cursor-pointer border px-2.5 py-1.5 text-[9px]! font-medium uppercase tracking-widest backdrop-blur transition sm:px-3 ${codeGeneration
                             ? "border-emerald-300/25 bg-emerald-300/10 text-emerald-200"
                             : "border-emerald-300/15 bg-emerald-300/5 text-emerald-200/65 hover:bg-emerald-300/10"
                             }`}
@@ -396,7 +405,7 @@ export function ArchitectureCanvas() {
                         onClick={implementation ? clearImplementation : handleImplementation}
                         title="Generate an implementation-ready project blueprint"
                         aria-pressed={Boolean(implementation)}
-                        className={`rounded-full border px-2.5 py-1.5 text-[9px] font-medium uppercase tracking-[0.1em] backdrop-blur transition sm:px-3 sm:text-[10px] ${implementation
+                        className={`rounded-lg cursor-pointer border px-2.5 py-1.5 text-[9px]! font-medium uppercase tracking-widest backdrop-blur transition sm:px-3 ${implementation
                             ? "border-violet-300/25 bg-violet-300/10 text-violet-200"
                             : "border-violet-300/15 bg-violet-300/5 text-violet-200/65 hover:bg-violet-300/10"
                             }`}
@@ -408,7 +417,7 @@ export function ArchitectureCanvas() {
                         onClick={() => setShowVersioning((value) => !value)}
                         title="Track architecture versions, compare changes, and plan migrations"
                         aria-pressed={showVersioning}
-                        className={`rounded-full border px-2.5 py-1.5 text-[9px] font-medium uppercase tracking-[0.1em] backdrop-blur transition sm:px-3 sm:text-[10px] ${showVersioning
+                        className={`rounded-lg cursor-pointer border px-2.5 py-1.5 text-[9px]! font-medium uppercase tracking-widest backdrop-blur transition sm:px-3 ${showVersioning
                             ? "border-cyan-300/25 bg-cyan-300/10 text-cyan-100"
                             : "border-cyan-300/15 bg-cyan-300/5 text-cyan-100/65 hover:bg-cyan-300/10"
                             }`}
@@ -420,7 +429,7 @@ export function ArchitectureCanvas() {
                         onClick={() => setShowJudgeMode((value) => !value)}
                         title="Run the one-click cinematic hackathon demonstration"
                         aria-pressed={showJudgeMode}
-                        className={`rounded-full border px-2.5 py-1.5 text-[9px] font-bold uppercase tracking-[0.1em] backdrop-blur transition sm:px-3 sm:text-[10px] ${showJudgeMode
+                        className={`rounded-lg cursor-pointer border px-2.5 py-1.5 text-[9px]! font-bold uppercase tracking-widest backdrop-blur transition sm:px-3 ${showJudgeMode
                             ? "border-[#d9ff4f]/40 bg-[#d9ff4f]/15 text-[#d9ff4f]"
                             : "border-[#d9ff4f]/25 bg-[#d9ff4f]/8 text-[#d9ff4f]/80 hover:bg-[#d9ff4f]/12"
                             }`}
@@ -432,7 +441,7 @@ export function ArchitectureCanvas() {
                         onClick={() => setShowProductionQA((value) => !value)}
                         title="Run the final production release gate"
                         aria-pressed={showProductionQA}
-                        className={`rounded-full border px-2.5 py-1.5 text-[9px] font-medium uppercase tracking-[0.1em] backdrop-blur transition sm:px-3 sm:text-[10px] ${showProductionQA
+                        className={`rounded-lg cursor-pointer border px-2.5 py-1.5 text-[9px]! font-medium uppercase tracking-widest backdrop-blur transition sm:px-3 ${showProductionQA
                             ? "border-emerald-300/25 bg-emerald-300/10 text-emerald-200"
                             : "border-emerald-300/15 bg-emerald-300/5 text-emerald-200/65 hover:bg-emerald-300/10"
                             }`}
@@ -444,16 +453,26 @@ export function ArchitectureCanvas() {
                         onClick={showAgentDemo ? () => setShowAgentDemo(false) : handleOpenAgentDemo}
                         title="Open the ChatGPT real-agent demo"
                         aria-pressed={showAgentDemo}
-                        className={`rounded-full border px-2.5 py-1.5 text-[9px] font-medium uppercase tracking-[0.1em] backdrop-blur transition sm:px-3 sm:text-[10px] ${showAgentDemo
+                        className={`rounded-lg cursor-pointer border px-2.5 py-1.5 text-[9px]! font-medium uppercase tracking-widest backdrop-blur transition sm:px-3 ${showAgentDemo
                             ? "border-[#d9ff4f]/25 bg-[#d9ff4f]/10 text-[#d9ff4f]"
                             : "border-[#d9ff4f]/15 bg-[#d9ff4f]/5 text-[#d9ff4f]/65 hover:bg-[#d9ff4f]/10"
                             }`}
                     >
                         Agent
                     </button>
-                    <div className="hidden rounded-full border border-[#d9ff4f]/15 bg-[#d9ff4f]/5 px-3 py-1.5 text-[10px] font-medium uppercase tracking-[0.12em] text-[#d9ff4f]/60 backdrop-blur sm:block">
+                    <div className="hidden rounded-full border border-[#d9ff4f]/15 bg-[#d9ff4f]/5 px-3 py-1.5 text-[8px] font-medium uppercase tracking-[0.12em] text-[#d9ff4f]/60 backdrop-blur sm:block">
                         AI controlled
                     </div>
+                    {nodes.length > 0 ? (
+                        <button
+                            type="button"
+                            onClick={handleResetWorkspace}
+                            title="Clear the current architecture and start a new prompt"
+                            className="pf-reset-button rounded-lg cursor-pointer border px-3 py-1.5 text-[9px]! font-semibold uppercase tracking-widest backdrop-blur transition"
+                        >
+                            New brief
+                        </button>
+                    ) : null}
                 </div>
             </div>
 
@@ -488,14 +507,14 @@ export function ArchitectureCanvas() {
                 <Background gap={24} size={1} color="rgba(255,255,255,0.045)" />
                 <Controls
                     showInteractive={false}
-                    className="!overflow-hidden !rounded-xl !border !border-white/10 !bg-[#101116] !shadow-xl [&>button]:!border-white/10 [&>button]:!bg-[#101116] [&>button]:!fill-white/60 [&>button:hover]:!bg-white/10"
+                    className="overflow-hidden! rounded-xl! border! border-white/10! !bg-[#101116]! shadow-xl! [&>button]:border-white/10! [&>button]:bg-[#101116]! [&>button]:fill-white/60! [&>button:hover]:bg-white/10!"
                 />
                 <MiniMap
                     pannable
                     zoomable
                     nodeColor="#d9ff4f"
                     maskColor="rgba(8,9,12,0.82)"
-                    className="!bottom-3 !right-3 !overflow-hidden !rounded-xl !border !border-white/10 !bg-[#101116] sm:!bottom-4 sm:!right-4"
+                    className="bottom-3! right-3! overflow-hidden! rounded-xl! border! border-white/10! bg-[#101116]! sm:bottom-4! sm:right-4!"
                 />
             </ReactFlow>
 

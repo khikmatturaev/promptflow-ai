@@ -147,3 +147,275 @@ button {
     animation: none;
   }
 }
+
+/* PromptFlow presentation layer — layout only. Keeps application behavior intact. */
+:root {
+  --pf-acid: #d9ff4f;
+  --pf-surface: rgba(10, 12, 16, 0.96);
+  --pf-surface-strong: rgba(8, 10, 13, 0.985);
+  --pf-border: rgba(255, 255, 255, 0.09);
+  --pf-muted: rgba(255, 255, 255, 0.42);
+}
+
+html {
+  height: 100%;
+  background: #050608;
+}
+
+body,
+#root {
+  height: 100%;
+}
+
+body {
+  overflow: hidden;
+}
+
+button,
+input,
+textarea,
+select {
+  min-height: 32px;
+}
+
+textarea {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(217, 255, 79, 0.28) transparent;
+}
+
+* {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(217, 255, 79, 0.2) transparent;
+}
+
+::-webkit-scrollbar {
+  width: 7px;
+  height: 7px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  border-radius: 999px;
+  background: rgba(217, 255, 79, 0.18);
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(217, 255, 79, 0.34);
+}
+
+.pf-app-shell {
+  height: 100dvh;
+  min-height: 100dvh;
+  overflow: hidden;
+}
+
+.pf-app-header {
+  min-height: 48px;
+}
+
+.pf-canvas-section {
+  min-height: 0;
+  overflow: hidden;
+}
+
+.pf-canvas-shell {
+  height: 100%;
+  min-height: 0;
+  border-radius: 22px;
+}
+
+.pf-toolbar {
+  max-width: min(100%, 980px);
+  align-content: flex-start;
+  row-gap: 6px;
+}
+
+.pf-toolbar button,
+.pf-toolbar > div {
+  white-space: nowrap;
+}
+
+.pf-toolbar button {
+  min-height: 30px;
+}
+
+.pf-modal {
+  max-width: calc(100% - 24px);
+  max-height: min(720px, calc(100dvh - 110px));
+  overflow-y: auto !important;
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
+  box-shadow:
+    0 24px 80px rgba(0, 0, 0, 0.48),
+    0 0 0 1px rgba(217, 255, 79, 0.025);
+}
+
+.pf-modal.pf-modal-flex {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden !important;
+}
+
+.pf-modal.pf-modal-flex > :last-child {
+  min-height: 0;
+}
+
+.pf-modal-header {
+  flex: 0 0 auto;
+}
+
+.pf-modal-scroll {
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+
+.pf-reset-button {
+  border-color: rgba(255, 255, 255, 0.11);
+  background: rgba(255, 255, 255, 0.035);
+  color: rgba(255, 255, 255, 0.62);
+}
+
+.pf-reset-button:hover {
+  border-color: rgba(217, 255, 79, 0.25);
+  background: rgba(217, 255, 79, 0.07);
+  color: #d9ff4f;
+}
+
+.pf-display-heading {
+  text-wrap: balance;
+}
+
+@media (max-width: 1100px) {
+  .pf-toolbar {
+    max-width: calc(100% - 76px);
+  }
+
+  .pf-toolbar button,
+  .pf-toolbar > div {
+    padding-left: 9px !important;
+    padding-right: 9px !important;
+    font-size: 8px !important;
+    letter-spacing: 0.07em !important;
+  }
+}
+
+@media (max-width: 760px) {
+  .pf-app-header {
+    min-height: 44px;
+  }
+
+  .pf-toolbar {
+    max-width: calc(100% - 16px);
+    justify-content: flex-start !important;
+    overflow-x: auto;
+    flex-wrap: nowrap !important;
+    padding-bottom: 3px;
+    scrollbar-width: none;
+  }
+
+  .pf-toolbar::-webkit-scrollbar {
+    display: none;
+  }
+
+  .pf-canvas-shell {
+    border-radius: 16px;
+  }
+
+  .pf-modal {
+    left: 8px !important;
+    right: 8px !important;
+    bottom: 8px !important;
+    top: auto !important;
+    width: auto !important;
+    max-width: none;
+    max-height: calc(100dvh - 110px);
+    border-radius: 18px !important;
+  }
+
+  .pf-modal.pf-modal-top {
+    top: 8px !important;
+    bottom: 8px !important;
+    max-height: calc(100dvh - 16px);
+  }
+
+  .pf-modal .text-2xl {
+    font-size: 1.25rem;
+  }
+
+  .pf-modal .text-xl {
+    font-size: 1.1rem;
+  }
+
+  .pf-modal-header {
+    padding: 12px 14px !important;
+  }
+
+  .pf-modal-scroll {
+    max-height: none;
+  }
+
+  .architect-experience {
+    overflow-y: auto;
+    align-items: flex-start !important;
+    padding-top: 56px !important;
+    padding-bottom: 20px;
+  }
+
+  .architect-experience > div {
+    margin-top: 8px;
+  }
+}
+
+@media (max-width: 520px) {
+  .pf-app-shell {
+    padding-left: 8px !important;
+    padding-right: 8px !important;
+  }
+
+  .pf-app-header {
+    gap: 8px !important;
+    padding-top: 8px !important;
+    padding-bottom: 8px !important;
+  }
+
+  .pf-toolbar {
+    gap: 4px !important;
+  }
+
+  .pf-toolbar button,
+  .pf-toolbar > div {
+    min-height: 28px;
+    padding: 6px 8px !important;
+    font-size: 7.5px !important;
+  }
+
+  .pf-modal {
+    max-height: calc(100dvh - 110px);
+  }
+
+  .architect-experience h2 {
+    font-size: 1.65rem !important;
+    line-height: 1.08;
+  }
+}
+
+@media (min-width: 1200px) {
+  .pf-modal {
+    max-height: min(760px, calc(100dvh - 110px));
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    scroll-behavior: auto !important;
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+  }
+}

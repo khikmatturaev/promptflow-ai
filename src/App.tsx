@@ -6,10 +6,10 @@ import { WebMCPStatusBadge } from "./components/WebMCPStatusBadge";
 function App() {
   return (
     <AppErrorBoundary>
-      <main className="min-h-screen bg-[#050608] px-3 py-3 text-white sm:px-5 sm:py-4 lg:px-8">
+      <main className="pf-app-shell bg-[#050608] px-3 py-2.5 text-white sm:px-5 sm:py-3 lg:px-8">
         <WebMCPRegistry />
-        <div className="mx-auto flex min-h-[calc(100vh-1.5rem)] max-w-[1440px] flex-col sm:min-h-[calc(100vh-2rem)]">
-          <header className="flex items-center justify-between gap-4 px-1 py-3 sm:py-4">
+        <div className="mx-auto flex h-full min-h-0 max-w-[1440px] flex-col">
+          <header className="pf-app-header flex shrink-0 items-center justify-between gap-4 px-1 py-2.5 sm:py-3">
             <div className="flex min-w-0 items-center gap-3">
               <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-[#d9ff4f] text-sm font-black text-[#08090c]">
                 PF
@@ -31,7 +31,7 @@ function App() {
             <WebMCPStatusBadge />
           </header>
 
-          <section className="min-h-0 flex-1 pb-3 sm:pb-4">
+          <section className="pf-canvas-section min-h-0 flex-1 pb-1 sm:pb-2">
             <ArchitectureCanvas />
           </section>
         </div>
