@@ -1,255 +1,116 @@
-# PromptFlow.ai 2.0
+# PromptFlow.ai
 
 ## AI Software Architect — WebMCP Agent OS
 
 **Describe it. Watch it architect. Build it.**
 
-PromptFlow is an AI-native software architecture workspace. A human can describe a system in plain English, while an AI agent can operate the live canvas directly through WebMCP. The graph lives in Zustand, renders with React Flow, and is validated by deterministic architecture audit/intelligence before and after agent mutations.
+PromptFlow.ai is an AI-native software architecture workspace where a human describes a system in natural language and an AI agent operates the live architecture canvas through WebMCP.
 
-## Product architecture
+PromptFlow treats architecture as a **living system**, not a static diagram. The agent can create and modify an architecture, analyze its structure, simulate scale and failure, harden the design, generate an implementation workspace, execute the generated Node/React project in a browser-native WebContainer, and finish with Production QA and a release verdict.
+
+---
+
+## Why PromptFlow
+
+Traditional architecture tools are primarily visual editors. PromptFlow adds an agent-native execution and verification loop:
 
 ```text
 Human brief
-   ↓
-AI agent semantic reasoning
-   ↓
-CORE 2 · WebMCP Agent OS
-   ├─ architect_system
-   ├─ analyze_architecture
-   ├─ recommend_architecture
-   ├─ simulate_architecture_scale
-   ├─ apply_architecture_recommendations
-   ├─ explain_architecture
-   └─ generate_implementation_plan
-   ↓
-CORE 1 · Intent compiler fallback
-   ↓
-Validated architecture operations
-   ↓
-Zustand source of truth
-   ↓
-React Flow live canvas
-   ↓
-Audit / Fix / Scale / Verify
-```
-
-The important separation is intentional: **ChatGPT handles open-ended semantic reasoning; PromptFlow owns the structured execution contract, validation, state, deterministic intelligence, and visualization.** This makes arbitrary briefs possible without pretending that a browser-only keyword parser is a general-purpose LLM.
-
-## Recommended hackathon agent path
-
-PromptFlow does **not** require a second model API inside the application for the WebMCP challenge. The clean separation is:
-
-```text
-Human intent
-   ↓
+    ↓
 ChatGPT / calling AI agent
-   ↓ semantic reasoning + tool choice
+    ↓ semantic reasoning + tool choice
 WebMCP
-   ↓ structured tool call
+    ↓ structured tool call
 PromptFlow deterministic architecture engine
-   ↓ validated graph + code generation
+    ↓ validated graph
+Architecture Intelligence
+    ↓ analysis / scale / failure simulation
+Break → Diagnose → Heal → Re-test
+    ↓
+Project generation
+    ↓
 WebContainer
-   ↓ install → test → build → runtime
-Judge Mode
-   ↓ break → diagnose → heal → re-test → QA → verdict
+    ↓ install → test → build → runtime verification
+Production QA
+    ↓
+Final verdict
 ```
 
-For a complete arbitrary brief, the recommended tool is **`build_and_verify_system`**. The calling agent should infer `components` and `connections` when the brief requires semantic domain understanding. PromptFlow then validates the plan and performs the complete architecture-to-proof pipeline in one WebMCP round-trip.
+The separation is intentional:
 
-Use **`get_promptflow_capabilities`** when the agent needs to discover the intended division of responsibility and the recommended primary workflow.
+- **The calling AI agent owns open-ended semantic reasoning and tool selection.**
+- **PromptFlow owns structured execution, validation, application state, deterministic architecture intelligence, code generation, browser-native execution, and verification.**
 
-This means PromptFlow is not an LLM wrapper: the AI agent supplies open-ended interpretation, while PromptFlow owns state, validation, deterministic architecture intelligence, project generation, browser-native execution, failure hardening, QA, and the final release verdict.
+PromptFlow therefore does not need to embed a second model API to make the WebMCP workflow work.
 
-### One-call judge demo
+---
 
-In ChatGPT's in-app browser, open the live PromptFlow URL and ask:
+# WebMCP Agent OS
 
-> Use PromptFlow's `build_and_verify_system` WebMCP tool to design and verify a production-ready marketplace for 1 million users with authentication, payments, realtime chat, object storage, background jobs, observability, and a PostgreSQL data layer. Infer a complete component and connection plan. Then summarize the architecture, execution result, QA score, and final verdict.
+PromptFlow exposes **49 WebMCP tools**:
 
-The canvas and Agent OS activity feed are driven by real WebMCP tool execution. The generated Node/React project is executed in WebContainer; the host page never executes generated source directly.
+- **37 Agent OS tools** for high-level workflows
+- **12 atomic tools** for precise architecture mutations
 
-## CORE 3 — Architecture Intelligence
+The browser agent can discover these capabilities from the live page and invoke them directly.
 
-CORE 3 moves PromptFlow beyond a structural graph check into an architecture-review brain. It evaluates the live system across:
+### Primary high-level workflow
 
-- **Reliability** — durable state, redundancy signals, recovery planning
-- **Scalability** — traffic boundaries, horizontal compute, cache, async processing, read scaling
-- **Performance** — cache, edge delivery, async offload, hot-path pressure
-- **Security** — identity boundaries, ingress controls, transport/secrets signals
-- **Resilience** — failure isolation, redundancy, async recovery boundaries
-- **Observability** — logs, metrics, tracing, telemetry and explicit operational ownership
-- **Stress Test** — deterministic what-if pressure model for a target user population
-- **Architecture DNA** — archetype, structural fingerprint, traits, strengths, and bottlenecks
+For a complete natural-language brief, the recommended tool is:
 
-### Architecture Intelligence tools
+`build_and_verify_system`
 
-20. `assess_architecture_intelligence` — full seven-dimension production-readiness assessment plus findings, recommendations, DNA, and optional stress test.
-21. `stress_test_architecture` — non-destructive target-scale pressure simulation with estimated RPS, bottlenecks, failure modes, and projected score.
-22. `get_architecture_dna` — return the architecture's structural fingerprint and system archetype.
-23. `apply_intelligence_recommendations` — validate and apply selected safe recommendations, then re-assess the live graph.
+The calling agent can infer a semantic component/connection plan and submit it as structured input. PromptFlow validates the plan before mutating the live architecture, then runs the architecture-to-proof pipeline.
 
-The original 12 atomic tools remain available alongside the Agent OS surface. The total is now **49 WebMCP tools: 37 Agent OS + 12 atomic**.
+`get_promptflow_capabilities` can be used when an agent first needs to understand the intended division of responsibility and recommended workflow.
 
-The intelligence layer is deliberately transparent: its scores are **heuristic architecture-planning signals**, not penetration tests, production load tests, SLO guarantees, or capacity certifications. Real agents can combine these signals with domain knowledge and actual infrastructure telemetry.
+### Agent OS capabilities
 
-### Architecture DNA
+The 37 high-level tools cover:
 
-DNA is deterministic for the current graph. The fingerprint changes when component types or relationships change, allowing the agent to compare architecture shape across iterations without storing a separate backend.
+**Architecture**
 
-### Stress testing
+- `architect_system`
+- `analyze_architecture`
+- `recommend_architecture`
+- `simulate_architecture_scale`
+- `apply_architecture_recommendations`
+- `explain_architecture`
+- `generate_implementation_plan`
 
-Stress tests are non-destructive. PromptFlow projects the existing deterministic scale operations into a temporary graph, compares current vs projected intelligence, and reports synthetic pressure. The model is intentionally disclosed in the result and must not be presented as a real benchmark.
+**Architecture Intelligence**
 
-## CORE 2 — WebMCP Agent OS
+- `assess_architecture_intelligence`
+- `stress_test_architecture`
+- `get_architecture_dna`
+- `apply_intelligence_recommendations`
 
-CORE 2 adds seven high-level WebMCP capabilities above the original atomic tool layer. A capable AI agent no longer needs dozens of add/connect calls for a complete system.
+**Digital Twin / Failure Simulation**
 
-### High-level Agent OS tools
+- `run_digital_twin`
+- `simulate_failure`
+- `simulate_load`
+- `apply_digital_twin_hardening`
 
-1. `architect_system` — primary orchestration tool. Accepts the full user brief and, optionally, an agent-authored semantic component/connection plan. PromptFlow validates the plan, applies it, scales it when justified, repairs deterministic structural findings, lays it out, and verifies the final graph.
-2. `analyze_architecture` — read-only architecture metrics + structural audit + represented capabilities.
-3. `recommend_architecture` — prioritized architecture review recommendations, optionally informed by a future scale target.
-4. `simulate_architecture_scale` — non-destructive “what if?” scale simulation with exact projected operations and before/after metrics/audits.
-5. `apply_architecture_recommendations` — apply deterministic structural fixes and/or scale patterns in one round-trip, then verify.
-6. `explain_architecture` — explain the whole system or a selected component with upstream/downstream dependencies.
-7. `generate_implementation_plan` — convert the live graph into ordered implementation phases and recommended first code targets.
+**Implementation Intelligence**
 
-### Atomic execution tools
+- `assess_implementation_readiness`
+- `generate_project_blueprint`
+- `generate_implementation_contracts`
 
-8. `add_architecture_node`
-9. `connect_architecture_nodes`
-10. `update_architecture_node`
-11. `remove_architecture_node`
-12. `clear_architecture_canvas`
-13. `generate_node_boilerplate`
-14. `get_architecture_snapshot`
-15. `audit_architecture`
-16. `auto_layout_architecture`
-17. `transform_architecture`
-18. `scale_architecture`
-19. `fix_architecture`
+**Project Generation / Execution**
 
-The atomic tools remain available for precise follow-up edits. For complete product briefs, agents should prefer `architect_system`. For arbitrary model-planned multi-step edits, `transform_architecture` remains the low-level batch primitive.
+- `generate_project_code`
+- `validate_generated_project`
+- `run_project_execution_preflight`
+- `review_generated_project`
+- `prepare_build_workspace`
+- `export_project_artifacts`
+- `run_final_hackathon_demo`
+- `run_project_execution_loop`
+- `diagnose_execution_failure`
 
-## Why arbitrary briefs now work professionally
-
-CORE 1 remains a very fast deterministic browser fallback. CORE 2 removes its semantic ceiling by allowing the real AI agent to submit its own structured architecture plan in the `architect_system` call:
-
-```text
-User: “Design a TikTok-like platform for 10M users…”
-                     ↓
-ChatGPT understands the domain semantically
-                     ↓
-architect_system {
-  request,
-  targetUsers,
-  components: [...],
-  connections: [...]
-}
-                     ↓
-PromptFlow validates every id/type/relationship
-                     ↓
-Build → Scale → Fix → Layout → Verify
-                     ↓
-Live architecture canvas
-```
-
-If the agent does not provide a component plan, `architect_system` falls back to CORE 1’s local `Intent → Architecture` compiler, so the tool still has a deterministic browser-only path.
-
-## Current capabilities
-
-- Arbitrary AI-agent-authored architecture plans through structured WebMCP schemas
-- Single-round-trip complete-system orchestration
-- Typed architecture nodes and directed relationships
-- React Flow live architecture canvas
-- Zustand as the single architecture source of truth
-- Deterministic structural architecture audit
-- Seven-dimensional Architecture Intelligence assessment
-- Reliability, scalability, performance, security, resilience, and observability review
-- Non-destructive heuristic stress testing and Architecture DNA fingerprinting
-- Deterministic auto-fix for safe structural findings
-- Gateway/cache/queue/worker/read-replica scale patterns
-- Non-destructive scale simulation
-- Architecture review recommendations
-- Whole-system and per-component explanations
-- Ordered implementation planning
-- Batch `transform_architecture` for precise AI follow-up edits
-- Real WebMCP execution telemetry with duration/failure state
-- 49 total WebMCP tools: 37 Agent OS + 12 atomic tools
-- No backend/API dependency required for the MVP execution layer
-
-## Real Agent OS demo
-
-1. Run PromptFlow.
-2. Open the page in ChatGPT's built-in browser and allow site access.
-3. Open **Agent** / **WebMCP Agent OS**.
-4. Confirm WebMCP is active and the Agent OS tool surface is discovered.
-5. Use the demo prompt:
-
-> Use PromptFlow's high-level Agent OS tools. Design a production-ready TikTok-like platform for 10 million users with video uploads, recommendations, realtime messaging, authentication, CDN/media storage, background processing, and analytics. Build it on the canvas, analyze it, recommend improvements, simulate 10M-user scale, apply the useful recommendations, then explain the final architecture.
-
-The activity feed is driven only by actual WebMCP executions. PromptFlow does not fabricate agent activity.
-
-## CORE 1 — local intent fallback
-
-The first-screen **Architect this** flow remains available and dependency-free:
-
-```text
-Brief → Intent → Architecture → Audit → Fix → Scale → Verify → Code
-```
-
-CORE 1 detects common domains, technologies, explicit requirements, and meaningful user/traffic scale. Scale parsing now ignores unrelated numbers unless they are attached to a scale suffix (`k`, `million`, etc.) or a traffic/user noun.
-
-## CORE 9 — Architecture Evolution / Versioning / Migration Intelligence
-
-CORE 9 makes the architecture graph evolvable instead of treating every canvas mutation as an isolated edit.
-
-### Version checkpoints
-
-PromptFlow can create immutable local architecture checkpoints containing:
-
-- full node and dependency snapshots
-- deterministic architecture fingerprint
-- graph size
-- audit score at checkpoint time
-- Architecture DNA fingerprint
-- human-readable release name and change message
-
-History is bounded to the latest 50 checkpoints and remains browser-local. Restoring a checkpoint invalidates downstream derived artifacts so stale code, execution, simulation, or review results cannot be mistaken for the restored architecture.
-
-### Architecture diff
-
-Version comparison classifies topology and component changes into:
-
-- **Breaking** — removed components/dependencies and high-risk API/database/auth/payment changes
-- **Significant** — implementation metadata or structural changes
-- **Non-breaking** — additive components and dependencies
-
-The diff includes exact changed component/dependency identities, fingerprints, counts, and a deterministic risk score.
-
-### Migration intelligence
-
-A version diff can be converted into an ordered migration plan covering:
-
-```text
-Database compatibility
-        ↓
-Data backfill / verification
-        ↓
-API & event contract compatibility
-        ↓
-Infrastructure provisioning
-        ↓
-Controlled application rollout
-        ↓
-Rollback readiness
-```
-
-The plan explicitly reports data-migration requirements, API compatibility requirements, downtime risk, preflight checks, and rollback actions. It is a planning model, not a guarantee of zero-downtime deployment.
-
-### Versioning Agent OS
-
-The Agent OS now includes:
+**Architecture Versioning**
 
 - `create_architecture_version`
 - `list_architecture_versions`
@@ -258,140 +119,181 @@ The Agent OS now includes:
 - `restore_architecture_version`
 - `clear_version_analysis`
 
-This brings the total to **49 WebMCP tools: 37 Agent OS + 12 atomic**.
+**Release / Demo**
 
-## Local development
+- `run_production_qa`
+- `run_judge_mode`
+- `get_promptflow_capabilities`
+- `build_and_verify_system`
 
-```bash
-pnpm install
-pnpm dev
-```
+The original atomic tools remain available for precise follow-up operations:
 
-Release gate:
+- `add_architecture_node`
+- `connect_architecture_nodes`
+- `update_architecture_node`
+- `remove_architecture_node`
+- `clear_architecture_canvas`
+- `generate_node_boilerplate`
+- `get_architecture_snapshot`
+- `audit_architecture`
+- `auto_layout_architecture`
+- `transform_architecture`
+- `scale_architecture`
+- `fix_architecture`
 
-```bash
-pnpm build
-pnpm lint
-```
+---
 
-## WebMCP deployment requirements
+# One-call WebMCP demo
 
-Vite dev/preview sends:
+Open the deployed PromptFlow URL in ChatGPT's in-app browser or in a WebMCP-enabled Chrome environment.
+
+Use:
+
+> Use PromptFlow's `build_and_verify_system` WebMCP tool to design and verify a production-ready marketplace for 1 million users with authentication, payments, realtime chat, object storage, background jobs, observability, and a PostgreSQL data layer. Infer a complete component and connection plan. Then summarize the architecture, execution result, QA score, and final verdict.
+
+The intended result is:
 
 ```text
-Origin-Agent-Cluster: ?1
-Permissions-Policy: tools=(self)
+Agent semantic reasoning
+        ↓
+build_and_verify_system
+        ↓
+validated architecture
+        ↓
+Judge Mode
+        ↓
+Break → Diagnose → Heal → Re-test
+        ↓
+Generate → Execute → QA
+        ↓
+Production verdict
 ```
 
-Production hosting must preserve equivalent headers or `document.modelContext` may be unavailable.
+The Agent activity feed is driven by real WebMCP execution. PromptFlow does not fabricate agent activity.
 
-## QA principles
+---
 
-- No simulated WebMCP activity.
-- Agent-authored plans are validated before destructive canvas replacement.
-- High-level tools use the same Zustand state and deterministic intelligence as the UI/atomic tools.
-- Read-only Agent OS tools do not mutate the live graph.
-- Scale simulation is projected in memory and does not touch canvas state.
-- Tool input lengths/counts are bounded to protect demo reliability.
-- The architecture score remains a **structural preflight score**, not a security, compliance, cost, or availability certification.
-- Source package does not claim build/lint PASS in environments where project dependencies are unavailable; `pnpm build` and `pnpm lint` remain the authoritative release gate.
+# Judge Mode
 
-## CORE 5 — Implementation Intelligence
+Judge Mode provides the main end-to-end demonstration:
 
-CORE 5 turns the architecture graph into an implementation contract rather than stopping at a diagram or review score.
+```text
+Brief
+  ↓
+Reason
+  ↓
+Architect
+  ↓
+Break
+  ↓
+Diagnose
+  ↓
+Heal
+  ↓
+Re-test
+  ↓
+Build
+  ↓
+Execute
+  ↓
+QA
+  ↓
+Verdict
+```
 
-### What it produces
+The demo deliberately introduces traffic and compute failure into the architecture model, identifies the resulting weaknesses, applies bounded hardening, and re-tests the same scenario.
 
-- **Implementation readiness** score and maturity
-- Component-by-component implementation map
-- Suggested source files and project structure
-- Dependency and interface map
+It then generates a project workspace, executes the generated Node/React project inside WebContainer, and finishes with the Production QA release gate.
+
+The UI exposes stage state and a before/after scorecard so the reasoning and recovery are visible.
+
+---
+
+# Architecture Intelligence
+
+PromptFlow evaluates the live architecture across seven planning dimensions:
+
+- **Reliability**
+- **Scalability**
+- **Performance**
+- **Security**
+- **Resilience**
+- **Observability**
+- **Stress Test**
+
+It also provides **Architecture DNA**:
+
+- system archetype
+- deterministic structural fingerprint
+- traits
+- strengths
+- bottlenecks
+
+Architecture DNA is deterministic for the current graph. Changes to component types or relationships can therefore be compared across architecture iterations.
+
+### Important limitation
+
+Architecture Intelligence scores are **heuristic planning signals**. They are not:
+
+- penetration tests
+- production load tests
+- SLO guarantees
+- capacity certifications
+- compliance certifications
+- security certifications
+
+---
+
+# Digital Twin
+
+The Digital Twin layer provides non-destructive failure and load simulation.
+
+It models:
+
+- load spikes and sustained traffic pressure
+- database, compute, cache, queue, and external dependency failures
+- regional outage scenarios
+- failure propagation
+- single points of failure
+- critical paths
+- survivability
+- recovery strategy
+- post-simulation hardening priorities
+
+Simulation is performed against a projected graph and does not mutate the live architecture.
+
+Hardening is a separate explicit operation. Safe operation batches are validated before application, followed by re-analysis.
+
+Digital Twin results are heuristic planning models, not production benchmarks or capacity guarantees.
+
+---
+
+# Implementation Intelligence
+
+PromptFlow can convert the architecture graph into an implementation contract.
+
+It produces:
+
+- implementation readiness
+- component implementation maps
+- suggested project files
+- dependency and interface maps
 - HTTP, event, data, and external integration contracts
-- Environment variable and secret contract
-- Ordered delivery phases with exit criteria
-- Unit, integration, contract, and resilience test targets
-- Implementation risks and mitigations
-- Prioritized first files to build
-- Architecture DNA fingerprint carried into the implementation blueprint
+- environment variable and secret contracts
+- ordered delivery phases
+- exit criteria
+- unit, integration, contract, and resilience test targets
+- implementation risks and mitigations
+- prioritized first files to build
+- Architecture DNA carried into the implementation blueprint
 
-The output is deliberately planning metadata. PromptFlow does not claim that suggested paths are the only valid project structure, and it does not fabricate production source code.
+These tools are read-only and do not silently overwrite implementation work.
 
-### Implementation Agent OS
+---
 
-The Agent OS now exposes 21 high-level tools plus the original 12 atomic tools, for **33 WebMCP tools total**.
+# Project Generation and Execution
 
-New implementation tools:
-
-- `assess_implementation_readiness` — evaluate whether the live graph is ready to enter implementation.
-- `generate_project_blueprint` — produce the complete project/file/delivery blueprint, including environment and test strategy.
-- `generate_implementation_contracts` — turn every represented relationship into an explicit implementation boundary.
-
-A capable agent can now run:
-
-```text
-Architect → Analyze → Stress → Digital Twin → Harden →
-Assess implementation → Generate blueprint → Generate contracts → Build
-```
-
-This keeps the graph as the source of truth while giving the agent enough structured information to move from architecture decisions toward actual engineering work.
-
-### Implementation safety
-
-All Core 5 tools are read-only. They never mutate the canvas. Existing `generate_node_boilerplate` remains the explicit code-artifact mutation primitive, so generated planning metadata cannot silently overwrite implementation work.
-
-## CORE 4 — Digital Twin / Failure & Load Simulation
-
-PromptFlow now includes a non-destructive Digital Twin layer above the live architecture graph.
-
-### What it models
-
-- Load spikes and sustained traffic pressure
-- Database, compute, cache, queue, and external dependency failures
-- Regional outage scenarios
-- Failure propagation through dependent components
-- Single points of failure
-- Critical paths
-- Survivability and projected architecture score
-- Recovery strategy and recovery class
-- Post-simulation hardening priorities
-
-The Digital Twin is intentionally a **heuristic planning model**, not a production benchmark, capacity guarantee, chaos-engineering system, or security certification.
-
-### WebMCP Agent OS
-
-The Agent OS now exposes 21 high-level tools plus the existing 12 atomic tools, for **30 WebMCP tools total**.
-
-New Digital Twin tools:
-
-- `run_digital_twin`
-- `simulate_failure`
-- `simulate_load`
-- `apply_digital_twin_hardening`
-
-A real browser agent can now run:
-
-```text
-Architect → Analyze → Stress → Digital Twin → Failure injection →
-Recovery analysis → Harden → Re-validate
-```
-
-without manually manipulating the canvas.
-
-### Safety model
-
-Read-only simulation tools never mutate the architecture. Hardening is a separate destructive tool, validates its complete operation batch before applying it, and re-runs the simulation and structural audit afterward.
-
-### Local UX
-
-The canvas exposes a **Simulate** action for a quick 1M-user load scenario. Detailed results appear in the Digital Twin panel while the live graph remains unchanged until an explicit hardening operation is requested.
-
-## CORE 6 — Real Project / Code Generation & Execution Intelligence
-
-CORE 6 turns the architecture and implementation blueprint into a bounded, inspectable project scaffold.
-
-### Project generation
-
-`generate_project_code` produces an in-browser artifact workspace containing:
+PromptFlow generates a bounded, inspectable project workspace containing items such as:
 
 - `package.json`
 - `tsconfig.json`
@@ -402,114 +304,304 @@ CORE 6 turns the architecture and implementation blueprint into a bounded, inspe
 - architecture documentation
 - implementation contracts
 
-Existing node boilerplate is reused when present; otherwise PromptFlow creates deterministic scaffolds from the architecture responsibility and boundaries.
+Generated source is a scaffold and implementation starting point; PromptFlow does not claim that generated source is automatically production-complete.
 
-### Execution intelligence
+## Real browser-native execution
 
-`validate_generated_project` and `run_project_execution_preflight` check:
+Node.js and React/Vite projects can run through WebContainer:
 
-- artifact path integrity
-- project manifest
-- executable source surface
-- test surface
-- scaffold bounds
-- build/run readiness
-- install/test/build/dev commands
-- remaining engineering review requirements
+```text
+Generate
+   ↓
+Mount
+   ↓
+Install
+   ↓
+Test
+   ↓
+Build
+   ↓
+Diagnose
+   ↓
+Heal (bounded)
+   ↓
+Re-run
+   ↓
+Verify
+```
 
-This is intentionally a **static browser-side execution preflight**. PromptFlow does not execute arbitrary generated code inside the host page.
+The generated project runs inside the isolated WebContainer runtime. The host page does not execute generated source directly.
 
-### Agent OS
+Execution exposes:
 
-CORE 6 adds:
-
-- `generate_project_code`
-- `validate_generated_project`
-- `run_project_execution_preflight`
-
-The Agent OS now exposes **21 high-level tools + 12 atomic tools = 33 WebMCP tools**.
-
-### Safety boundary
-
-Architecture mutation remains explicit. Code generation creates a separate artifact workspace and does not silently modify the live graph. Generated source is a scaffold, not a claim of production-complete code.
-\n## CORE 7 — Production Code Intelligence + Build Workspace\n\nCORE 7 closes the architecture-to-artifact loop without pretending that browser-side code generation is a production CI runner.\n\n### Production code intelligence\n\nGenerated project artifacts can be reviewed for:\n\n- manifest and entrypoint integrity\n- unfinished implementation markers\n- possible hardcoded credentials\n- environment configuration contract\n- test scaffolding coverage\n- architecture contract documentation\n- production-readiness score and prioritized next actions\n\n### Real build workspace\n\nThe generated project is materialized as an inspectable in-browser workspace. Engineers can browse every generated file, inspect source content, review the execution preflight, and export the complete workspace as a local ZIP. The export includes `promptflow/workspace.json` with project identity, fingerprint, file count, and execution metadata. No source is uploaded to a PromptFlow server.\n\n### Final hackathon orchestration\n\nThe final demo can run the complete deterministic showcase without mutating the architecture:\n\n`text\nArchitecture → Intelligence → Load → Digital Twin →\nImplementation → Code Generation → Execution Preflight → DNA\n`\n\nThe real AI agent can also call `run_final_hackathon_demo` through WebMCP, while the UI provides a local showcase control. This makes the demo repeatable and keeps every reported stage tied to actual PromptFlow state.\n\n### CORE 7 Agent OS additions\n\n- `review_generated_project` — production-code heuristic review.\n- `prepare_build_workspace` — materialize the current generated project for inspection.\n- `export_project_artifacts` — create a local ZIP artifact without server upload.\n- `run_final_hackathon_demo` — orchestrate the complete end-to-end showcase.\n\nAt the CORE 7 checkpoint, the WebMCP surface was **37 tools: 25 Agent OS + 12 atomic**; CORE 8 and CORE 9 extend that surface further.\n\n> Browser-side execution remains intentionally safe: PromptFlow can validate run readiness and provide commands, but it does not execute arbitrary generated code inside the host page.\n
-
-## CORE 8 — Real Execution + Self-Healing Build Loop
-
-CORE 8 closes the remaining gap between generated artifacts and verified execution.
-
-### Real browser-native execution
-
-PromptFlow now uses **WebContainer** as an isolated in-browser Node.js runtime. The execution loop can:
-
-`Generate → Mount → Install → Test → Build → Diagnose → Heal → Re-run → Verify`
-
-The host page never executes generated project code directly. Generated files are mounted into the isolated runtime and commands run inside that runtime.
-
-### Self-healing loop
-
-When a bounded execution attempt fails, PromptFlow classifies the failure using deterministic diagnostics and applies only high-confidence, targeted patches. The retry budget is bounded to prevent runaway loops.
-
-Supported deterministic repair classes include:
-
-- missing React / React DOM runtime declarations
-- missing React / React DOM TypeScript declarations
-- broken generated test import boundaries
-- dependency-network failures are detected but **never** auto-repaired
-
-Every healing attempt records the diagnostic, patch, confidence and verification result.
-
-### Execution state
-
-The UI and WebMCP expose:
-
-- real install/test/build status
+- install/test/build status
 - command output
-- failure diagnostics and evidence
-- self-healing attempts
-- final verified artifact set
+- diagnostics and evidence
+- bounded self-healing attempts
+- final artifact verification
 - execution capability state
 
-Python projects remain static-preflight only in CORE 8; Node.js and React/Vite projects use the real WebContainer execution path.
+Dependency-network failures are detected but are not automatically repaired.
 
-### CORE 8 Agent OS additions
+Python projects remain static-preflight only.
 
-- `run_project_execution_loop` — run install → test → build with bounded self-healing.
-- `diagnose_execution_failure` — expose the latest execution diagnosis without mutating the project.
+---
 
-The current WebMCP surface is **49 tools: 37 Agent OS + 12 atomic**.
+# Production QA
 
-### Runtime requirements
+The final `run_production_qa` release gate validates:
 
-WebContainer requires a cross-origin isolated, secure context. PromptFlow now declares the required COOP/COEP headers in Vite and Vercel configuration. The first real execution may take longer because the browser runtime must boot and dependencies must be installed.
-
-> WebContainer is a browser-native Node.js runtime provided by StackBlitz. PromptFlow uses it to execute generated projects without a PromptFlow backend or host-page code execution.
-
-## FINAL — Production QA, Security, Performance & Hackathon Hardening
-
-The final release gate adds a deterministic `run_production_qa` Agent OS tool and an in-product Production QA panel. It validates:
-
-- architecture graph integrity and bounded graph size
-- generated artifact path safety and workspace size
+- architecture graph integrity
+- generated artifact path safety and workspace bounds
 - browser isolation / WebMCP deployment headers
-- complete WebMCP registry coverage
-- generated project readiness and production-code review state
+- WebMCP registry coverage
+- generated project readiness
+- production-code review state
 - real WebContainer execution status
 - architecture version/checkpoint integrity
 
-The final WebMCP surface is **49 tools: 37 Agent OS + 12 atomic**.
+Production QA is a release gate, not a security certification. Real deployments should still use normal CI/CD, dependency scanning, secret scanning, security testing, observability, and infrastructure controls.
 
-Production QA is intentionally a release gate, not a security certification. Heuristic code review and browser-side checks should be complemented by the project's real CI, dependency scanning, secret scanning, and deployment controls before production use.
+---
 
-## FINAL WOW PASS — Judge Mode
+# Architecture Versioning
 
-PromptFlow includes a judge-facing one-click orchestration layer that turns the complete architecture lifecycle into a single cinematic flow:
+PromptFlow can create browser-local architecture checkpoints containing:
+
+- node and dependency snapshots
+- architecture fingerprint
+- graph size
+- audit score
+- Architecture DNA
+- release name
+- change message
+
+History is bounded to the latest 50 checkpoints.
+
+Version comparison classifies changes as:
+
+- **Breaking**
+- **Significant**
+- **Non-breaking**
+
+Migration intelligence produces an ordered planning model:
 
 ```text
-Brief → Reason → Architect → Break → Diagnose → Heal → Re-test
-      → Build → Execute → QA → Production Verdict
+Database compatibility
+        ↓
+Data backfill / verification
+        ↓
+API & event contract compatibility
+        ↓
+Infrastructure provisioning
+        ↓
+Controlled rollout
+        ↓
+Rollback readiness
 ```
 
-Judge Mode deliberately injects severe traffic and compute failure, identifies the resulting bottlenecks, applies bounded hardening operations, re-runs the same digital-twin scenario, generates a project workspace, executes the real browser sandbox build loop with bounded self-healing, and finishes with the production QA gate. The UI exposes live stage state plus a before/after scorecard so the reasoning is visible rather than hidden behind a final diagram.
+This is a planning model, not a zero-downtime guarantee.
 
-The final WebMCP surface is **49 tools: 37 Agent OS + 12 atomic**, including `run_judge_mode`.
+---
+
+# CORE 1 — Local Intent Fallback
+
+PromptFlow also retains a dependency-free local architecture compiler:
+
+```text
+Brief
+  ↓
+Intent
+  ↓
+Architecture
+  ↓
+Audit
+  ↓
+Fix
+  ↓
+Scale
+  ↓
+Verify
+  ↓
+Code
+```
+
+This fallback recognizes common domains, technologies, explicit requirements, and meaningful scale targets.
+
+For arbitrary domain reasoning, the WebMCP agent path is preferred because the calling AI agent provides the semantic interpretation.
+
+---
+
+# Technical Architecture
+
+```text
+React
+ ├─ React Flow
+ ├─ Zustand
+ └─ WebMCP UI
+       │
+       ▼
+WebMCP Registry
+       │
+       ├─ 37 Agent OS tools
+       └─ 12 atomic tools
+       │
+       ▼
+Deterministic Architecture Engine
+       ├─ Architecture Audit
+       ├─ Architecture Intelligence
+       ├─ Digital Twin
+       ├─ Implementation Intelligence
+       ├─ Code Generation
+       ├─ Execution Engine
+       └─ Production QA
+       │
+       ▼
+WebContainer
+       │
+       ▼
+Judge Mode / Final Verdict
+```
+
+The architecture graph is stored in Zustand as the live source of truth and rendered with React Flow.
+
+The WebMCP layer is browser-native and does not require a PromptFlow backend for the MVP execution flow.
+
+---
+
+# Safety and execution boundaries
+
+PromptFlow intentionally keeps clear boundaries between agent reasoning and deterministic execution.
+
+- Agent-authored architecture plans are validated before destructive canvas replacement.
+- Read-only tools do not mutate the live graph.
+- Simulation tools operate non-destructively.
+- Hardening is an explicit mutation.
+- Code generation uses a separate artifact workspace.
+- Generated source is never executed directly by the host page.
+- WebContainer execution is bounded and isolated.
+- Self-healing uses deterministic, high-confidence repair classes only.
+- Dependency-network failures are never auto-repaired.
+- Tool inputs and operation counts are bounded for browser/demo reliability.
+- Reported architecture scores are clearly presented as heuristic signals.
+
+---
+
+# Local development
+
+Requirements:
+
+- Node.js
+- pnpm
+
+Install dependencies:
+
+```bash
+pnpm install
+```
+
+Start development:
+
+```bash
+pnpm dev
+```
+
+Release gate:
+
+```bash
+pnpm build
+pnpm lint
+```
+
+`pnpm build` and `pnpm lint` are the authoritative release checks.
+
+---
+
+# WebMCP and production deployment
+
+WebMCP and WebContainer require a secure, cross-origin-isolated document.
+
+The production host must preserve:
+
+```text
+Cross-Origin-Opener-Policy: same-origin
+Cross-Origin-Embedder-Policy: require-corp
+Origin-Agent-Cluster: ?1
+Permissions-Policy: tools=(self)
+```
+
+For Netlify, the repository includes `netlify.toml` with the production build and header contract. A Netlify deployment should serve the headers on the deployed document before WebContainer execution is expected to work.
+
+After deployment, verify in the browser console:
+
+```js
+window.crossOriginIsolated;
+```
+
+Expected:
+
+```text
+true
+```
+
+You can also inspect the document response headers in DevTools → Network.
+
+If `crossOriginIsolated` is `false`, WebContainer execution should be treated as unavailable until the deployment headers are corrected.
+
+---
+
+# WebMCP testing
+
+For local WebMCP testing, enable WebMCP testing support in a compatible Chrome build and relaunch the browser.
+
+Recommended agent test flow:
+
+1. Open PromptFlow.
+2. Open the WebMCP Model Context Tool Inspector.
+3. Confirm that the PromptFlow tool surface is discovered.
+4. Ask the agent to use `build_and_verify_system`.
+5. Observe the WebMCP execution trace.
+6. Observe the live architecture canvas.
+7. Observe Judge Mode.
+8. Verify Build / Execute / QA.
+9. Inspect the final production verdict.
+
+A representative request:
+
+> Use PromptFlow's `build_and_verify_system` WebMCP tool to design a production-ready order processing platform for 10 million users with authentication, payments, PostgreSQL, Redis, queues, background workers, webhooks, realtime notifications, and high resilience. Infer a complete component and connection plan. Then summarize the architecture, execution result, QA score, and final verdict.
+
+---
+
+# WebMCP Challenge submission
+
+PromptFlow was meaningfully extended with WebMCP Agent OS capabilities for the WebMCP Challenge.
+
+The WebMCP-specific extension includes:
+
+- WebMCP tool registration and discovery
+- 49 browser-exposed tools
+- high-level Agent OS orchestration
+- agent-authored structured architecture plans
+- `build_and_verify_system`
+- Judge Mode integration
+- deterministic architecture validation
+- failure injection, diagnosis, and hardening
+- real browser-native WebContainer execution
+- Production QA and final release verdict
+- production cross-origin-isolation deployment configuration
+
+The core value of the WebMCP integration is that an AI agent can reason about a user's request and then operate PromptFlow through explicit, structured browser tools rather than relying on fragile UI automation.
+
+---
+
+# Live product
+
+**Production:** https://promptflow-webmcp.netlify.app/
+
+Open the production application in a WebMCP-enabled environment to experience the complete agent-to-architecture workflow.
+
+---
+
+# License
+
+PromptFlow.ai is released under the **MIT License**. See [`LICENSE`](LICENSE).
